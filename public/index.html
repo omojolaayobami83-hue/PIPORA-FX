@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#080b10"
+  >
+
+  <title>PIPORA FX | Smart Market Intelligence</title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <!-- TradingView Chart Library -->
+  <script
+    src="https://s3.tradingview.com/tv.js"
+  ></script>
+
+</head>
+
+<body>
+
+  <!-- APP -->
+  <div class="app-container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <div class="brand">
+
+        <div class="brand-icon">
+          P
+        </div>
+
+        <div class="brand-text">
+
+          <h2>PIPORA FX</h2>
+
+          <span>
+            SMART MARKET INTELLIGENCE
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- NAVIGATION -->
+      <nav class="navigation">
+
+        <button
+          class="nav-item active"
+          data-page="dashboard"
+        >
+
+          <span>▦</span>
+
+          Dashboard
+
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-page="scanner"
+        >
+
+          <span>⌕</span>
+
+          Market Scanner
+
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-page="academy"
+        >
+
+          <span>▤</span>
+
+          FX Academy
+
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-page="journal"
+        >
+
+          <span>▣</span>
+
+          Trade Journal
+
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-page="premium"
+        >
+
+          <span>◇</span>
+
+          Premium
+
+        </button>
+
+      </nav>
+
+
+      <!-- SIDEBAR BOTTOM -->
+      <div class="sidebar-bottom">
+
+        <div class="system-status">
+
+          <span class="status-dot"></span>
+
+          <div>
+
+            <strong>
+              System Ready
+            </strong>
+
+            <small>
+              Market intelligence
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+    <main class="main-content">
+
+
+      <!-- TOP HEADER -->
+      <header class="topbar">
+
+        <div class="page-heading">
+
+          <h1>
+            Market Dashboard
+          </h1>
+
+          <p>
+            Analyze the market before making a decision.
+          </p>
+
+        </div>
+
+
+        <div class="topbar-right">
+
+          <div class="market-status">
+
+            <span class="status-dot"></span>
+
+            <span id="connectionStatus">
+              Demo Mode
+            </span>
+
+          </div>
+
+
+          <button
+            class="profile-button"
+            type="button"
+          >
+
+            P
+
+          </button>
+
+        </div>
+
+      </header>
+
+
+      <!-- DASHBOARD PAGE -->
+      <section
+        id="dashboard"
+        class="page active"
+      >
+
+
+        <!-- MARKET SELECTOR -->
+        <div class="market-selector-section">
+
+          <div class="section-heading">
+
+            <h2>
+              Select Market
+            </h2>
+
+            <span>
+              Choose your trading pair
+            </span>
+
+          </div>
+
+
+          <div class="market-selector">
+
+            <button
+              class="market-button active"
+              data-market="EURUSD"
+            >
+
+              <strong>
+                EURUSD
+              </strong>
+
+              <small>
+                Euro / US Dollar
+              </small>
+
+            </button>
+
+
+            <button
+              class="market-button"
+              data-market="GBPUSD"
+            >
+
+              <strong>
+                GBPUSD
+              </strong>
+
+              <small>
+                British Pound
+              </small>
+
+            </button>
+
+
+            <button
+              class="market-button"
+              data-market="XAUUSD"
+            >
+
+              <strong>
+                XAUUSD
+              </strong>
+
+              <small>
+                Gold
+              </small>
+
+            </button>
+
+
+            <button
+              class="market-button"
+              data-market="USDJPY"
+            >
+
+              <strong>
+                USDJPY
+              </strong>
+
+              <small>
+                US Dollar / Yen
+              </small>
+
+            </button>
+
+
+            <button
+              class="market-button"
+              data-market="AUDUSD"
+            >
+
+              <strong>
+                AUDUSD
+              </strong>
+
+              <small>
+                Australian Dollar
+              </small>
+
+            </button>
+
+
+            <button
+              class="market-button"
+              data-market="USDCAD"
+            >
+
+              <strong>
+                USDCAD
+              </strong>
+
+              <small>
+                US Dollar / Canadian Dollar
+              </small>
+
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- MARKET OVERVIEW -->
+        <div class="overview-grid">
+
+
+          <!-- PRICE -->
+          <div class="overview-card">
+
+            <span class="card-label">
+              Market Price
+            </span>
+
+            <h2 id="marketPrice">
+              --
+            </h2>
+
+            <span
+              class="card-description"
+              id="priceDescription"
+            >
+
+              Waiting for market data
+
+            </span>
+
+          </div>
+
+
+          <!-- TREND -->
+          <div class="overview-card">
+
+            <span class="card-label">
+              Market Trend
+            </span>
+
+            <h2 id="trend">
+              WAIT
+            </h2>
+
+            <span class="card-description">
+              Trend direction
+            </span>
+
+          </div>
+
+
+          <!-- STRUCTURE -->
+          <div class="overview-card">
+
+            <span class="card-label">
+              Market Structure
+            </span>
+
+            <h2 id="structure">
+              WAIT
+            </h2>
+
+            <span class="card-description">
+              Price structure
+            </span>
+
+          </div>
+
+
+          <!-- MOMENTUM -->
+          <div class="overview-card">
+
+            <span class="card-label">
+              RSI Momentum
+            </span>
+
+            <h2 id="rsi">
+              --
+            </h2>
+
+            <span class="card-description">
+              RSI 14
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <!-- CHART SECTION -->
+        <section class="chart-section">
+
+
+          <div class="chart-header">
+
+
+            <div>
+
+              <h2 id="chartMarket">
+                EURUSD
+              </h2>
+
+              <span>
+                Live Market Chart
+              </span>
+
+            </div>
+
+
+            <!-- TIMEFRAME -->
+            <div class="timeframe-selector">
+
+              <button
+                class="timeframe-button"
+                data-timeframe="5min"
+              >
+
+                5M
+
+              </button>
+
+
+              <button
+                class="timeframe-button active"
+                data-timeframe="15min"
+              >
+
+                15M
+
+              </button>
+
+
+              <button
+                class="timeframe-button"
+                data-timeframe="1h"
+              >
+
+                1H
+
+              </button>
+
+
+              <button
+                class="timeframe-button"
+                data-timeframe="4h"
+              >
+
+                4H
+
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <!-- TRADINGVIEW CHART -->
+          <div
+            id="tradingview-chart"
+            class="chart-container"
+          >
+
+            <div class="chart-loading">
+
+              <span>
+                Loading market chart...
+              </span>
+
+            </div>
+
+          </div>
+
+
+        </section>
+
+
+        <!-- ANALYSIS -->
+        <section class="analysis-section">
+
+
+          <div class="section-heading">
+
+            <h2>
+              Smart Market Analysis
+            </h2>
+
+            <span>
+              Technical market conditions
+            </span>
+
+          </div>
+
+
+          <div class="analysis-grid">
+
+
+            <!-- SIGNAL -->
+            <div class="analysis-card signal-card">
+
+              <div class="analysis-card-header">
+
+                <h3>
+                  Market Decision
+                </h3>
+
+                <span>
+                  AI Analysis
+                </span>
+
+              </div>
+
+
+              <div
+                id="signal"
+                class="signal-badge wait"
+              >
+
+                WAIT
+
+              </div>
+
+
+              <p
+                id="signalExplanation"
+                class="analysis-description"
+              >
+
+                Waiting for market data and confirmation.
+
+              </p>
+
+
+              <div class="analysis-details">
+
+
+                <div>
+
+                  <span>
+                    Entry Zone
+                  </span>
+
+                  <strong id="entry">
+                    --
+                  </strong>
+
+                </div>
+
+
+                <div>
+
+                  <span>
+                    Stop Loss
+                  </span>
+
+                  <strong id="stopLoss">
+                    --
+                  </strong>
+
+                </div>
+
+
+                <div>
+
+                  <span>
+                    Take Profit
+                  </span>
+
+                  <strong id="takeProfit">
+                    --
+                  </strong>
+
+                </div>
+
+
+              </div>
+
+
+            </div>
+
+
+            <!-- INDICATORS -->
+            <div class="analysis-card">
+
+
+              <div class="analysis-card-header">
+
+                <h3>
+                  Technical Indicators
+                </h3>
+
+                <span>
+                  Indicator Status
+                </span>
+
+              </div>
+
+
+              <div class="indicator-list">
+
+
+                <div class="indicator-row">
+
+                  <span>
+                    EMA 9
+                  </span>
+
+                  <strong id="ema9">
+                    --
+                  </strong>
+
+                </div>
+
+
+                <div class="indicator-row">
+
+                  <span>
+                    EMA 21
+                  </span>
+
+                  <strong id="ema21">
+                    --
+                  </strong>
+
+                </div>
+
+
+                <div class="indicator-row">
+
+                  <span>
+                    RSI 14
+                  </span>
+
+                  <strong id="rsiIndicator">
+                    --
+                  </strong>
+
+                </div>
+
+
+                <div class="indicator-row">
+
+                  <span>
+                    Trend Confirmation
+                  </span>
+
+                  <strong id="trendConfirmation">
+                    WAIT
+                  </strong>
+
+                </div>
+
+
+              </div>
+
+
+            </div>
+
+
+            <!-- STRUCTURE -->
+            <div class="analysis-card">
+
+
+              <div class="analysis-card-header">
+
+                <h3>
+                  Market Structure
+                </h3>
+
+                <span>
+                  Price Action
+                </span>
+
+              </div>
+
+
+              <div class="structure-list">
+
+
+                <div class="indicator-row">
+
+                  <span>
+                    Break of Structure
+                  </span>
+
+                  <strong id="bos">
+                    WAIT
+                  </strong>
+
+                </div>
+
+
+                <div class="indicator-row">
+
+                  <span>
+                    CHOCH
+                  </span>
+
+                  <strong id="choch">
+                    WAIT
+                  </strong>
+
+                </div>
+
+
+                <div class="indicator-row">
+
+                  <span>
+                    Liquidity
+                  </span>
+
+                  <strong id="liquidity">
+                    WAIT
+                  </strong>
+
+                </div>
+
+
+                <div class="indicator-row">
+
+                  <span>
+                    Supply / Demand
+                  </span>
+
+                  <strong id="supplyDemand">
+                    WAIT
+                  </strong>
+
+                </div>
+
+
+              </div>
+
+
+            </div>
+
+
+          </div>
+
+
+        </section>
+
+
+        <!-- SUPPORT RESISTANCE -->
+        <section class="levels-section">
+
+
+          <div class="section-heading">
+
+            <h2>
+              Key Market Levels
+            </h2>
+
+            <span>
+              Price zones
+            </span>
+
+          </div>
+
+
+          <div class="levels-grid">
+
+
+            <div class="level-card">
+
+              <span>
+                Resistance
+              </span>
+
+              <strong id="resistance">
+                --
+              </strong>
+
+            </div>
+
+
+            <div class="level-card">
+
+              <span>
+                Support
+              </span>
+
+              <strong id="support">
+                --
+              </strong>
+
+            </div>
+
+
+          </div>
+
+
+        </section>
+
+
+        <!-- DISCLAIMER -->
+        <div class="disclaimer">
+
+          <strong>
+            Market Risk Notice
+          </strong>
+
+          <p>
+
+            PIPORA FX provides technical market analysis for educational
+            purposes only. Market conditions can change rapidly.
+            Signals are not guaranteed and are not financial advice.
+            Always manage your risk and verify market conditions
+            before making trading decisions.
+
+          </p>
+
+        </div>
+
+
+      </section>
+
+
+      <!-- MARKET SCANNER PAGE -->
+      <section
+        id="scanner"
+        class="page"
+      >
+
+        <div class="section-heading">
+
+          <h2>
+            Market Scanner
+          </h2>
+
+          <span>
+            Scan available markets
+          </span>
+
+        </div>
+
+
+        <div class="scanner-card">
+
+          <p>
+
+            Select a market from the Dashboard to begin
+            analyzing price action and technical conditions.
+
+          </p>
+
+          <button
+            class="primary-button"
+            data-page="dashboard"
+          >
+
+            Open Dashboard
+
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- ACADEMY PAGE -->
+      <section
+        id="academy"
+        class="page"
+      >
+
+        <div class="section-heading">
+
+          <h2>
+            FX Academy
+          </h2>
+
+          <span>
+            Learn forex market structure
+          </span>
+
+        </div>
+
+
+        <div class="academy-grid">
+
+
+          <div class="academy-card">
+
+            <span>
+              LESSON 01
+            </span>
+
+            <h3>
+              Market Structure
+            </h3>
+
+            <p>
+
+              Learn higher highs, higher lows,
+              lower highs and lower lows.
+
+            </p>
+
+          </div>
+
+
+          <div class="academy-card">
+
+            <span>
+              LESSON 02
+            </span>
+
+            <h3>
+              Support & Resistance
+            </h3>
+
+            <p>
+
+              Understand important price levels
+              and market reactions.
+
+            </p>
+
+          </div>
+
+
+          <div class="academy-card">
+
+            <span>
+              LESSON 03
+            </span>
+
+            <h3>
+              Break of Structure
+            </h3>
+
+            <p>
+
+              Learn how price breaks previous
+              swing highs and lows.
+
+            </p>
+
+          </div>
+
+
+          <div class="academy-card">
+
+            <span>
+              LESSON 04
+            </span>
+
+            <h3>
+              Liquidity
+            </h3>
+
+            <p>
+
+              Understand liquidity pools,
+              sweeps and stop hunts.
+
+            </p>
+
+          </div>
+
+
+        </div>
+
+      </section>
+
+
+      <!-- JOURNAL PAGE -->
+      <section
+        id="journal"
+        class="page"
+      >
+
+        <div class="section-heading">
+
+          <h2>
+            Trade Journal
+          </h2>
+
+          <span>
+            Record your trading decisions
+          </span>
+
+        </div>
+
+
+        <div class="journal-card">
+
+          <p>
+
+            Your trading journal will help you
+            record setups, entry reasons,
+            risk and trade results.
+
+          </p>
+
+
+          <div class="journal-form">
+
+
+            <label>
+
+              Market
+
+              <select id="journalMarket">
+
+                <option>
+                  EURUSD
+                </option>
+
+                <option>
+                  GBPUSD
+                </option>
+
+                <option>
+                  XAUUSD
+                </option>
+
+                <option>
+                  USDJPY
+                </option>
+
+                <option>
+                  AUDUSD
+                </option>
+
+                <option>
+                  USDCAD
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <label>
+
+              Trade Direction
+
+              <select id="journalDirection">
+
+                <option>
+                  BUY
+                </option>
+
+                <option>
+                  SELL
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <label>
+
+              Entry Price
+
+              <input
+                id="journalEntry"
+                type="number"
+                step="any"
+                placeholder="Enter entry price"
+              >
+
+            </label>
+
+
+            <label>
+
+              Trade Notes
+
+              <textarea
+                id="journalNotes"
+                placeholder="Why did you take this trade?"
+              ></textarea>
+
+            </label>
+
+
+            <button
+              id="saveJournal"
+              class="primary-button"
+              type="button"
+            >
+
+              Save Trade
+
+            </button>
+
+
+          </div>
+
+
+          <div
+            id="journalEntries"
+            class="journal-entries"
+          >
+
+          </div>
+
+
+        </div>
+
+      </section>
+
+
+      <!-- PREMIUM PAGE -->
+      <section
+        id="premium"
+        class="page"
+      >
+
+        <div class="section-heading">
+
+          <h2>
+            PIPORA FX Premium
+          </h2>
+
+          <span>
+            Advanced market intelligence
+          </span>
+
+        </div>
+
+
+        <div class="premium-card">
+
+
+          <div class="premium-icon">
+            ◇
+          </div>
+
+
+          <h2>
+            Advanced Analysis
+          </h2>
+
+
+          <p>
+
+            Premium features can be added in future
+            versions of PIPORA FX.
+
+          </p>
+
+
+          <div class="premium-features">
+
+            <span>
+              Advanced Market Scanner
+            </span>
+
+            <span>
+              Multi-Timeframe Analysis
+            </span>
+
+            <span>
+              Advanced Market Structure
+            </span>
+
+            <span>
+              Trading Journal Statistics
+            </span>
+
+          </div>
+
+
+          <button
+            class="primary-button"
+            type="button"
+            disabled
+          >
+
+            Coming Soon
+
+          </button>
+
+
+        </div>
+
+      </section>
+
+
+    </main>
+
+
+  </div>
+
+
+  <!-- APP JAVASCRIPT -->
+  <script src="app.js"></script>
+
+
+</body>
+
+</html>
