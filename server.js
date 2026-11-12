@@ -13,14 +13,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Supported markets
-const SYMBOLS = {
-  EURUSD: "EUR/USD",
-  GBPUSD: "GBP/USD",
-  XAUUSD: "XAU/USD",
-  USDJPY: "USD/JPY",
-  AUDUSD: "AUD/USD",
-  USDCAD: "USD/CAD"
-};
+const SYMBOLS = { XAUUSD: "XAU/USD" };
 
 // Supported timeframes
 const INTERVALS = new Set([
@@ -34,7 +27,7 @@ const INTERVALS = new Set([
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
-    app: "PIPORA FX",
+    app: "PIPORA GOLD",
     apiConfigured: Boolean(API_KEY),
     timestamp: new Date().toISOString()
   });
@@ -50,7 +43,7 @@ app.get("/api/markets", (_req, res) => {
 // Get live market data
 app.get("/api/price", async (req, res) => {
   const market = String(
-    req.query.market || "EURUSD"
+    req.query.market || "XAUUSD"
   ).toUpperCase();
 
   const interval = String(
@@ -192,7 +185,7 @@ app.get("*", (_req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(
-    `PIPORA FX running at http://localhost:${PORT}`
+    `PIPORA GOLD running at http://localhost:${PORT}`
   );
 
   console.log(
