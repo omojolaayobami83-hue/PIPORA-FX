@@ -914,3 +914,18 @@ button:disabled {
 .gold-focus{display:flex;flex-direction:column;gap:7px;padding:18px 20px;margin-bottom:22px;background:linear-gradient(110deg,#17271f,#10151d);border:1px solid #31523f;border-radius:12px}
 .gold-focus strong{font-size:17px;color:var(--green);letter-spacing:.7px}
 .gold-focus span{font-size:12px;color:var(--muted)}
+
+/* Multi-timeframe Gold scanner */
+.mtf-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
+.mtf-card{background:#0b1017;border:1px solid var(--border);border-radius:10px;padding:16px;display:grid;gap:9px}
+.mtf-card small,.mtf-verdict>span{font-size:10px;color:var(--muted);letter-spacing:.7px}
+.mtf-card strong{font-size:18px;color:var(--yellow)}
+.mtf-card span{font-size:11px;color:var(--muted)}
+.mtf-verdict{padding:17px;background:#14231d;border:1px solid #31523f;border-radius:10px;margin:15px 0}
+.mtf-verdict strong{display:block;color:var(--green);font-size:20px;margin:8px 0}
+.mtf-verdict p,.session-card>p{font-size:12px;color:var(--muted);line-height:1.6}
+.session-card{margin-top:16px}.session-card h3{margin-bottom:8px}
+.session-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.session-grid div{padding:14px;background:#0b1017;border:1px solid var(--border);border-radius:9px}
+.session-grid strong,.session-grid span{display:block}.session-grid span{font-size:12px;color:var(--green);margin-top:8px}
+@media(max-width:700px){.mtf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.session-grid{grid-template-columns:1fr}}
