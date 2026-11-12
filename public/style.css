@@ -948,3 +948,8 @@ button:disabled {
 .news-result.danger{border-color:var(--red);color:#ff9aa5;background:#29151b}
 .news-result.caution{border-color:var(--yellow);color:var(--yellow);background:#282316}
 @media(max-width:700px){.risk-form{grid-template-columns:1fr}.pipora-meaning{margin-top:15px}.sidebar-bottom{display:none}}
+
+
+/* Installable app controls */
+.install-app-button{border:1px solid #00c98d;background:#103629;color:#e8fff6;padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px}
+.install-app-button[hidden]{display:none}
