@@ -1,7 +1,7 @@
 {
-  "name": "pipora-fx",
+  "name": "pipora-gold",
   "version": "1.0.0",
-  "description": "PIPORA FX - Smart Market Intelligence",
+  "description": "PIPORA GOLD - Gold Market Intelligence",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
