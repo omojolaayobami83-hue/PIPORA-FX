@@ -1075,3 +1075,60 @@ function startApp() {
 }
 
 document.addEventListener("DOMContentLoaded", startApp);
+
+// PIPORA GOLD risk calculator: broker contract size is user supplied.
+function calculateGoldRisk(){
+  const balance=Number(getElement("riskBalance")?.value);
+  const riskPct=Number(getElement("riskPercent")?.value);
+  const stopDistance=Number(getElement("riskDistance")?.value);
+  const contractSize=Number(getElement("riskContract")?.value);
+  const amountNode=getElement("riskAmount"), lotsNode=getElement("riskLots"), noteNode=getElement("riskNote");
+  if(![balance,riskPct,stopDistance,contractSize].every(Number.isFinite)||balance<=0||riskPct<=0||riskPct>100||stopDistance<=0||contractSize<=0){
+    if(amountNode)amountNode.textContent="Risk amount: enter valid positive values";
+    if(lotsNode)lotsNode.textContent="Estimated lot size: --";
+    if(noteNode)noteNode.textContent="All four inputs are required. Check your broker's contract size.";
+    return;
+  }
+  const riskAmount=balance*riskPct/100;
+  const estimatedLots=riskAmount/(stopDistance*contractSize);
+  if(amountNode)amountNode.textContent="Risk amount: "+riskAmount.toFixed(2)+" (account currency)";
+  if(lotsNode)lotsNode.textContent="Estimated lot size: "+estimatedLots.toFixed(4);
+  if(noteNode)noteNode.textContent="Formula: balance × risk % ÷ (stop distance × contract size). Confirm lot step, minimum lot, tick value and margin with your broker. This is an estimate, not a trade instruction.";
+}
+const riskButton=getElement("calculateRisk");
+if(riskButton)riskButton.addEventListener("click",calculateGoldRisk);
+
+// Manual event checker only: this does not fetch or verify live news.
+function checkGoldNewsEvent(){
+  const name=getElement("newsEventName")?.value.trim();
+  const rawTime=getElement("newsEventTime")?.value;
+  const impact=getElement("newsImpact")?.value;
+  const output=getElement("newsResult");
+  if(!output)return;
+  const eventTime=rawTime?new Date(rawTime):null;
+  if(!name||!rawTime||!eventTime||Number.isNaN(eventTime.getTime())){
+    output.textContent="Enter an event name and a valid event time. Confirm the time zone shown by your calendar.";
+    output.className="news-result caution";
+    return;
+  }
+  const minutes=(eventTime.getTime()-Date.now())/60000;
+  const windowMinutes=impact==="high"?30:impact==="medium"?15:5;
+  if(impact==="high"&&Math.abs(minutes)<=30){
+    output.textContent=name+": HIGH-IMPACT EVENT WINDOW. Avoid opening a new Gold trade; volatility and spread can rise. Event time is based on your device clock.";
+    output.className="news-result danger";
+  }else if(impact==="medium"&&Math.abs(minutes)<=15){
+    output.textContent=name+": medium-impact event is near. Consider waiting for volatility to settle.";
+    output.className="news-result caution";
+  }else if(impact==="low"&&Math.abs(minutes)<=5){
+    output.textContent=name+": event time is close. Use caution.";
+    output.className="news-result caution";
+  }else if(minutes>windowMinutes){
+    output.textContent=name+" is about "+Math.round(minutes)+" minutes away. Recheck the calendar and market conditions closer to release.";
+    output.className="news-result";
+  }else{
+    output.textContent=name+" is outside the warning window or has passed. This manual check cannot confirm whether the event was released.";
+    output.className="news-result";
+  }
+}
+const newsButton=getElement("checkNews");
+if(newsButton)newsButton.addEventListener("click",checkGoldNewsEvent);
