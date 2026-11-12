@@ -1,5 +1,5 @@
 /* ==========================================
-   PIPORA FX
+   PIPORA GOLD
    SMART MARKET INTELLIGENCE
    Market Analysis Engine
 ========================================== */
@@ -49,7 +49,7 @@ const TIMEFRAMES = {
   "4h": "240"
 };
 
-let selectedMarket = "EURUSD";
+let selectedMarket = "XAUUSD";
 let selectedTimeframe = "15min";
 
 let candles = [];
@@ -907,7 +907,7 @@ function resetAnalysis() {
 function getJournalEntries() {
   try {
     const saved = localStorage.getItem(
-      "pipora_fx_journal"
+      "pipora_gold_journal"
     );
 
     return saved ? JSON.parse(saved) : [];
