@@ -16,6 +16,9 @@
   >
 
   <title>PIPORA GOLD | Smart Market Intelligence</title>
+  <meta name="description" content="PIPORA GOLD is a focused XAUUSD market analysis and trading journal tool.">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/pipora-icon.svg" type="image/svg+xml">
 
   <link
     rel="stylesheet"
@@ -170,6 +173,7 @@
 
 
         <div class="topbar-right">
+          <button id="installAppButton" class="install-app-button" type="button" hidden>Install App</button>
 
           <div class="market-status">
 
@@ -1069,6 +1073,11 @@
 
   <!-- APP JAVASCRIPT -->
   <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(error => console.warn("App offline support unavailable:", error)));
+    }
+  </script>
 
 
 </body>
