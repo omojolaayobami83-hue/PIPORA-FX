@@ -1132,3 +1132,24 @@ function checkGoldNewsEvent(){
 }
 const newsButton=getElement("checkNews");
 if(newsButton)newsButton.addEventListener("click",checkGoldNewsEvent);
+
+
+// PWA install prompt (supported Android browsers).
+let piporaInstallPrompt=null;
+const installAppButton=getElement("installAppButton");
+window.addEventListener("beforeinstallprompt",event=>{
+  event.preventDefault();piporaInstallPrompt=event;
+  if(installAppButton)installAppButton.hidden=false;
+});
+if(installAppButton){
+  installAppButton.addEventListener("click",async()=>{
+    if(!piporaInstallPrompt){
+      alert("To install PIPORA GOLD, open your browser menu and choose 'Install app' or 'Add to Home screen'.");
+      return;
+    }
+    piporaInstallPrompt.prompt();
+    await piporaInstallPrompt.userChoice;
+    piporaInstallPrompt=null;installAppButton.hidden=true;
+  });
+}
+window.addEventListener("appinstalled",()=>{if(installAppButton)installAppButton.hidden=true;});
