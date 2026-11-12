@@ -1,0 +1,15 @@
+{
+  "id": "/",
+  "name": "PIPORA GOLD",
+  "short_name": "PIPORA GOLD",
+  "description": "Focused XAUUSD market analysis and trading journal.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080b10",
+  "theme_color": "#080b10",
+  "orientation": "any",
+  "icons": [
+    {"src": "/pipora-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+  ]
+}
