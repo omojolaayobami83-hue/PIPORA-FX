@@ -929,3 +929,22 @@ button:disabled {
 .session-grid div{padding:14px;background:#0b1017;border:1px solid var(--border);border-radius:9px}
 .session-grid strong,.session-grid span{display:block}.session-grid span{font-size:12px;color:var(--green);margin-top:8px}
 @media(max-width:700px){.mtf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.session-grid{grid-template-columns:1fr}}
+
+
+/* PIPORA meaning, risk calculator and news safety panels */
+.pipora-meaning{margin-top:auto;margin-bottom:18px;padding:13px;background:#101a17;border:1px solid #294b3a;border-radius:10px}
+.pipora-meaning strong{display:block;color:var(--green);font-size:12px;margin-bottom:8px}
+.pipora-meaning p{font-size:11px;line-height:1.7;color:var(--text)}
+.pipora-meaning small{display:block;color:var(--muted);font-size:10px;line-height:1.5;margin-top:7px}
+.risk-card,.news-card{margin-top:16px}
+.risk-card h3,.news-card h3{margin-bottom:9px}
+.risk-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:15px 0}
+.risk-form label{display:grid;gap:7px;color:var(--muted);font-size:12px}
+.risk-form input,.risk-form select{width:100%;min-width:0;padding:12px;background:#090e14;color:var(--text);border:1px solid var(--border);border-radius:8px}
+.risk-result,.news-result{display:grid;gap:9px;padding:15px;margin-top:15px;background:#0b1017;border:1px solid var(--border);border-radius:9px;line-height:1.6}
+.risk-result strong{color:var(--green)}
+.risk-result span{font-weight:bold}
+.risk-result small,.news-disclaimer{color:var(--muted);font-size:11px;line-height:1.6}
+.news-result.danger{border-color:var(--red);color:#ff9aa5;background:#29151b}
+.news-result.caution{border-color:var(--yellow);color:var(--yellow);background:#282316}
+@media(max-width:700px){.risk-form{grid-template-columns:1fr}.pipora-meaning{margin-top:15px}.sidebar-bottom{display:none}}
