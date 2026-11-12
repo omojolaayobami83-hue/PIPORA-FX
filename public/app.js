@@ -906,9 +906,7 @@ function resetAnalysis() {
 
 function getJournalEntries() {
   try {
-    const saved = localStorage.getItem(
-      "pipora_gold_journal"
-    );
+    const saved = localStorage.getItem("pipora_gold_journal") || localStorage.getItem("pipora_fx_journal");
 
     return saved ? JSON.parse(saved) : [];
 
@@ -997,7 +995,7 @@ if (saveJournalButton) {
 
     try {
       localStorage.setItem(
-        "pipora_fx_journal",
+        "pipora_gold_journal",
         JSON.stringify(entries)
       );
 
@@ -1023,6 +1021,48 @@ if (saveJournalButton) {
 // START APPLICATION
 // ==========================================
 
+
+/* PIPORA GOLD: top-down multi-timeframe analysis */
+async function fetchTimeframeAnalysis(interval) {
+  const q=new URLSearchParams({market:"XAUUSD",interval});
+  const response=await fetch("/api/price?"+q.toString());
+  const payload=await response.json();
+  if(!response.ok||!Array.isArray(payload.values)) throw new Error(payload.error||"Data unavailable");
+  const data=payload.values.slice().reverse().map(c=>({open:+c.open,high:+c.high,low:+c.low,close:+c.close})).filter(c=>[c.open,c.high,c.low,c.close].every(Number.isFinite));
+  if(data.length<30) throw new Error("Not enough "+interval+" candles");
+  const structure=analyzeStructure(data), closes=data.map(c=>c.close);
+  const fast=calculateEMA(closes,9).at(-1), slow=calculateEMA(closes,21).at(-1);
+  const emaBias=fast>slow?"BULLISH":fast<slow?"BEARISH":"NEUTRAL";
+  return {bias:structure.trend===emaBias?emaBias:"MIXED",structure:structure.structure,emaBias};
+}
+async function runGoldMtfScan(){
+  const button=getElement("runMtfScan");if(button){button.disabled=true;button.textContent="Scanning…";}
+  setText("mtfVerdict","SCANNING");setText("mtfExplanation","Comparing four Gold timeframes…");
+  const frames=[["4h","mtf4h"],["1h","mtf1h"],["15min","mtf15m"],["5min","mtf5m"]], results={};
+  try{
+    for(const [tf,id] of frames){const a=await fetchTimeframeAnalysis(tf);results[tf]=a;setText(id,a.bias);setText(id+"Note",a.structure+" · EMA "+a.emaBias);}
+    const higher=[results["4h"].bias,results["1h"].bias], lower=[results["15min"].bias,results["5min"].bias];
+    let verdict="WAIT", explanation="Timeframes are mixed. Wait for agreement; do not force a trade.";
+    if(higher.every(x=>x==="BULLISH")&&lower.every(x=>x==="BULLISH")){verdict="BULLISH ALIGNMENT";explanation="All four timeframes currently align bullish. This is context, not an entry signal; wait for a pullback and a separate trigger.";}
+    else if(higher.every(x=>x==="BEARISH")&&lower.every(x=>x==="BEARISH")){verdict="BEARISH ALIGNMENT";explanation="All four timeframes currently align bearish. This is context, not an entry signal; wait for a pullback and a separate trigger.";}
+    else if(higher.every(x=>x==="BULLISH")){verdict="BULLISH BIAS · WAIT";explanation="The higher timeframes lean bullish, but lower-timeframe confirmation is incomplete.";}
+    else if(higher.every(x=>x==="BEARISH")){verdict="BEARISH BIAS · WAIT";explanation="The higher timeframes lean bearish, but lower-timeframe confirmation is incomplete.";}
+    setText("mtfVerdict",verdict);setText("mtfExplanation",explanation);
+    setText("mtfUpdated","Last scan: "+new Date().toLocaleString("en-NG",{timeZone:"Africa/Lagos"}));
+  }catch(error){setText("mtfVerdict","SCAN INCOMPLETE");setText("mtfExplanation",error.message+" No directional conclusion is available.");frames.forEach(([,id])=>{setText(id,"--");setText(id+"Note","Data unavailable");});}
+  finally{if(button){button.disabled=false;button.textContent="Run Gold scan";}}
+}
+function updateGoldSessionClock(){
+  const parts=new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Lagos",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date());
+  const h=Number(parts.find(p=>p.type==="hour").value),m=Number(parts.find(p=>p.type==="minute").value),t=h*60+m;
+  const active=(start,end)=>t>=start&&t<end;
+  setText("londonSession",active(480,1020)?"OPEN · approx 08:00–17:00":"CLOSED · approx 08:00–17:00");
+  setText("newYorkSession",active(780,1260)?"OPEN · approx 13:00–21:00":"CLOSED · approx 13:00–21:00");
+  setText("overlapSession",active(780,1020)?"OPEN · approx 13:00–17:00":"CLOSED · approx 13:00–17:00");
+}
+const mtfButton=getElement("runMtfScan");if(mtfButton)mtfButton.addEventListener("click",runGoldMtfScan);
+updateGoldSessionClock();setInterval(updateGoldSessionClock,60000);
+
 function startApp() {
   resetAnalysis();
 
@@ -1031,6 +1071,7 @@ function startApp() {
   renderChart();
 
   loadMarketData();
+  runGoldMtfScan();
 }
 
 document.addEventListener("DOMContentLoaded", startApp);
