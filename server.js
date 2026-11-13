@@ -27,7 +27,8 @@ const INTERVALS = new Set([
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
-    app: "PIPORA GOLD",\n    supportedMarkets: Object.keys(SYMBOLS),
+    app: "PIPORA GOLD",
+    supportedMarkets: Object.keys(SYMBOLS),
     apiConfigured: Boolean(API_KEY),
     timestamp: new Date().toISOString()
   });
