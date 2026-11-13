@@ -201,524 +201,95 @@
 
 
       <!-- DASHBOARD PAGE -->
-      <section
-        id="dashboard"
-        class="page active"
-      >
-
-
-        <div class="gold-focus"><strong>XAUUSD · GOLD / US DOLLAR</strong><span>One instrument. Focused analysis. No pair switching.</span></div>
-
-        <!-- MARKET OVERVIEW -->
-        <div class="overview-grid">
-
-
-          <!-- PRICE -->
-          <div class="overview-card">
-
-            <span class="card-label">
-              Market Price
-            </span>
-
-            <h2 id="marketPrice">
-              --
-            </h2>
-
-            <span
-              class="card-description"
-              id="priceDescription"
-            >
-
-              Waiting for market data
-
-            </span>
-
-          </div>
-
-
-          <!-- TREND -->
-          <div class="overview-card">
-
-            <span class="card-label">
-              Market Trend
-            </span>
-
-            <h2 id="trend">
-              WAIT
-            </h2>
-
-            <span class="card-description">
-              Trend direction
-            </span>
-
-          </div>
-
-
-          <!-- STRUCTURE -->
-          <div class="overview-card">
-
-            <span class="card-label">
-              Market Structure
-            </span>
-
-            <h2 id="structure">
-              WAIT
-            </h2>
-
-            <span class="card-description">
-              Price structure
-            </span>
-
-          </div>
-
-
-          <!-- MOMENTUM -->
-          <div class="overview-card">
-
-            <span class="card-label">
-              RSI Momentum
-            </span>
-
-            <h2 id="rsi">
-              --
-            </h2>
-
-            <span class="card-description">
-              RSI 14
-            </span>
-
-          </div>
-
+      <section id="dashboard" class="page active">
+        <div class="section-heading">
+          <h2>Choose a Market</h2>
+          <span>Select an instrument to open its chart and analysis</span>
         </div>
-
-
-        <!-- CHART SECTION -->
-        <section class="chart-section">
-
-
-          <div class="chart-header">
-
-
-            <div>
-
-              <h2 id="chartMarket">
-                XAUUSD
-              </h2>
-
-              <span>
-                Live Market Chart
-              </span>
-
-            </div>
-
-
-            <!-- TIMEFRAME -->
-            <div class="timeframe-selector">
-
-              <button
-                class="timeframe-button"
-                data-timeframe="5min"
-              >
-
-                5M
-
-              </button>
-
-
-              <button
-                class="timeframe-button active"
-                data-timeframe="15min"
-              >
-
-                15M
-
-              </button>
-
-
-              <button
-                class="timeframe-button"
-                data-timeframe="1h"
-              >
-
-                1H
-
-              </button>
-
-
-              <button
-                class="timeframe-button"
-                data-timeframe="4h"
-              >
-
-                4H
-
-              </button>
-
-            </div>
-
-          </div>
-
-
-          <!-- TRADINGVIEW CHART -->
-          <div
-            id="tradingview-chart"
-            class="chart-container"
-          >
-
-            <div class="chart-loading">
-
-              <span>
-                Loading market chart...
-              </span>
-
-            </div>
-
-          </div>
-
-
-        </section>
-
-
-        <!-- ANALYSIS -->
-        <section class="analysis-section">
-
-
-          <div class="section-heading">
-
-            <h2>
-              Smart Market Analysis
-            </h2>
-
-            <span>
-              Technical market conditions
-            </span>
-
-          </div>
-
-
-          <div class="analysis-grid">
-
-
-            <!-- SIGNAL -->
-            <div class="analysis-card signal-card">
-
-              <div class="analysis-card-header">
-
-                <h3>
-                  Market Decision
-                </h3>
-
-                <span>
-                  AI Analysis
-                </span>
-
-              </div>
-
-
-              <div
-                id="signal"
-                class="signal-badge wait"
-              >
-
-                WAIT
-
-              </div>
-
-
-              <p
-                id="signalExplanation"
-                class="analysis-description"
-              >
-
-                Waiting for market data and confirmation.
-
-              </p>
-
-
-              <div class="analysis-details">
-
-
-                <div>
-
-                  <span>
-                    Entry Zone
-                  </span>
-
-                  <strong id="entry">
-                    --
-                  </strong>
-
-                </div>
-
-
-                <div>
-
-                  <span>
-                    Stop Loss
-                  </span>
-
-                  <strong id="stopLoss">
-                    --
-                  </strong>
-
-                </div>
-
-
-                <div>
-
-                  <span>
-                    Take Profit
-                  </span>
-
-                  <strong id="takeProfit">
-                    --
-                  </strong>
-
-                </div>
-
-
-              </div>
-
-
-            </div>
-
-
-            <!-- INDICATORS -->
-            <div class="analysis-card">
-
-
-              <div class="analysis-card-header">
-
-                <h3>
-                  Technical Indicators
-                </h3>
-
-                <span>
-                  Indicator Status
-                </span>
-
-              </div>
-
-
-              <div class="indicator-list">
-
-
-                <div class="indicator-row">
-
-                  <span>
-                    EMA 9
-                  </span>
-
-                  <strong id="ema9">
-                    --
-                  </strong>
-
-                </div>
-
-
-                <div class="indicator-row">
-
-                  <span>
-                    EMA 21
-                  </span>
-
-                  <strong id="ema21">
-                    --
-                  </strong>
-
-                </div>
-
-
-                <div class="indicator-row">
-
-                  <span>
-                    RSI 14
-                  </span>
-
-                  <strong id="rsiIndicator">
-                    --
-                  </strong>
-
-                </div>
-
-
-                <div class="indicator-row">
-
-                  <span>
-                    Trend Confirmation
-                  </span>
-
-                  <strong id="trendConfirmation">
-                    WAIT
-                  </strong>
-
-                </div>
-
-
-              </div>
-
-
-            </div>
-
-
-            <!-- STRUCTURE -->
-            <div class="analysis-card">
-
-
-              <div class="analysis-card-header">
-
-                <h3>
-                  Market Structure
-                </h3>
-
-                <span>
-                  Price Action
-                </span>
-
-              </div>
-
-
-              <div class="structure-list">
-
-
-                <div class="indicator-row">
-
-                  <span>
-                    Break of Structure
-                  </span>
-
-                  <strong id="bos">
-                    WAIT
-                  </strong>
-
-                </div>
-
-
-                <div class="indicator-row">
-
-                  <span>
-                    CHOCH
-                  </span>
-
-                  <strong id="choch">
-                    WAIT
-                  </strong>
-
-                </div>
-
-
-                <div class="indicator-row">
-
-                  <span>
-                    Liquidity
-                  </span>
-
-                  <strong id="liquidity">
-                    WAIT
-                  </strong>
-
-                </div>
-
-
-                <div class="indicator-row">
-
-                  <span>
-                    Supply / Demand
-                  </span>
-
-                  <strong id="supplyDemand">
-                    WAIT
-                  </strong>
-
-                </div>
-
-
-              </div>
-
-
-            </div>
-
-
-          </div>
-
-
-        </section>
-
-
-        <!-- SUPPORT RESISTANCE -->
-        <section class="levels-section">
-
-
-          <div class="section-heading">
-
-            <h2>
-              Key Market Levels
-            </h2>
-
-            <span>
-              Price zones
-            </span>
-
-          </div>
-
-
-          <div class="levels-grid">
-
-
-            <div class="level-card">
-
-              <span>
-                Resistance
-              </span>
-
-              <strong id="resistance">
-                --
-              </strong>
-
-            </div>
-
-
-            <div class="level-card">
-
-              <span>
-                Support
-              </span>
-
-              <strong id="support">
-                --
-              </strong>
-
-            </div>
-
-
-          </div>
-
-
-        </section>
-
-
-        <!-- DISCLAIMER -->
-        <div class="disclaimer">
-
-          <strong>
-            Market Risk Notice
-          </strong>
-
-          <p>
-
-            PIPORA GOLD provides technical market analysis for educational
-            purposes only. Market conditions can change rapidly.
-            Signals are not guaranteed and are not financial advice.
-            Always manage your risk and verify market conditions
-            before making trading decisions.
-
-          </p>
-
+        <div class="market-dashboard-grid">
+          <button class="market-tile" type="button" data-market="XAUUSD">
+            <span class="market-tile-icon">🥇</span>
+            <span class="market-tile-copy"><strong>GOLD vs USD</strong><small>XAUUSD · Gold</small></span>
+            <span class="market-tile-price" id="tilePriceXAUUSD">Loading price…</span>
+            <span class="market-tile-action">Open chart →</span>
+          </button>
+          <button class="market-tile" type="button" data-market="GBPJPY">
+            <span class="market-tile-icon">🇬🇧 🇯🇵</span>
+            <span class="market-tile-copy"><strong>GBP vs JPY</strong><small>GBPJPY · Pound / Yen</small></span>
+            <span class="market-tile-price" id="tilePriceGBPJPY">Loading price…</span>
+            <span class="market-tile-action">Open chart →</span>
+          </button>
         </div>
-
-
+        <div class="dashboard-note">Choose a market to view its live chart, technical indicators and market analysis. No chart is shown on this home screen.</div>
       </section>
 
+      <!-- MARKET CHART PAGE: opened only after a dashboard card is selected -->
+      <section id="market" class="page">
+        <button id="backToDashboard" class="back-dashboard-button" type="button">← Back to dashboard</button>
+        <div class="section-heading market-page-heading">
+          <h2 id="marketPageTitle">Market Chart</h2>
+          <span id="marketPageSubtitle">Live chart and technical analysis</span>
+        </div>
+        <div class="overview-grid">
+          <div class="overview-card"><span class="card-label">Market Price</span><h2 id="marketPrice">--</h2><span class="card-description" id="priceDescription">Waiting for market data</span></div>
+          <div class="overview-card"><span class="card-label">Market Trend</span><h2 id="trend">WAIT</h2><span class="card-description">Trend direction</span></div>
+          <div class="overview-card"><span class="card-label">Market Structure</span><h2 id="structure">WAIT</h2><span class="card-description">Price structure</span></div>
+          <div class="overview-card"><span class="card-label">RSI Momentum</span><h2 id="rsi">--</h2><span class="card-description">RSI 14</span></div>
+        </div>
+        <section class="chart-section">
+          <div class="chart-header">
+            <div><h2 id="chartMarket">XAUUSD</h2><span>Live Market Chart</span></div>
+            <div class="timeframe-selector">
+              <button class="timeframe-button" data-timeframe="5min">5M</button>
+              <button class="timeframe-button active" data-timeframe="15min">15M</button>
+              <button class="timeframe-button" data-timeframe="1h">1H</button>
+              <button class="timeframe-button" data-timeframe="4h">4H</button>
+            </div>
+          </div>
+          <div id="tradingview-chart" class="chart-container"><div class="chart-loading">Select a market to load its chart…</div></div>
+        </section>
+        <section class="analysis-section">
+          <div class="section-heading"><h2>Smart Market Analysis</h2><span>Technical market conditions</span></div>
+          <div class="analysis-grid">
+            <div class="analysis-card signal-card">
+              <div class="analysis-card-header"><h3>Market Decision</h3><span>Rule-based analysis</span></div>
+              <div id="signal" class="signal-badge wait">WAIT</div>
+              <p id="signalExplanation" class="analysis-description">Waiting for market data and confirmation.</p>
+              <div class="analysis-details">
+                <div><span>Entry Zone</span><strong id="entry">--</strong></div>
+                <div><span>Stop Loss</span><strong id="stopLoss">--</strong></div>
+                <div><span>Take Profit</span><strong id="takeProfit">--</strong></div>
+              </div>
+            </div>
+            <div class="analysis-card">
+              <div class="analysis-card-header"><h3>Technical Indicators</h3><span>Indicator status</span></div>
+              <div class="indicator-list">
+                <div class="indicator-row"><span>EMA 9</span><strong id="ema9">--</strong></div>
+                <div class="indicator-row"><span>EMA 21</span><strong id="ema21">--</strong></div>
+                <div class="indicator-row"><span>RSI 14</span><strong id="rsiIndicator">--</strong></div>
+                <div class="indicator-row"><span>Trend Confirmation</span><strong id="trendConfirmation">WAIT</strong></div>
+              </div>
+            </div>
+            <div class="analysis-card">
+              <div class="analysis-card-header"><h3>Market Structure</h3><span>Price action</span></div>
+              <div class="structure-list">
+                <div class="indicator-row"><span>Break of Structure</span><strong id="bos">WAIT</strong></div>
+                <div class="indicator-row"><span>CHOCH</span><strong id="choch">WAIT</strong></div>
+                <div class="indicator-row"><span>Liquidity</span><strong id="liquidity">WAIT</strong></div>
+                <div class="indicator-row"><span>Supply / Demand</span><strong id="supplyDemand">WAIT</strong></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="levels-section">
+          <div class="section-heading"><h2>Key Market Levels</h2><span>Price zones</span></div>
+          <div class="levels-grid">
+            <div class="level-card"><span>Resistance</span><strong id="resistance">--</strong></div>
+            <div class="level-card"><span>Support</span><strong id="support">--</strong></div>
+          </div>
+        </section>
+        <div class="disclaimer"><strong>Market Risk Notice</strong><p>PIPORA provides technical market analysis for educational purposes only. Signals are not guaranteed and are not financial advice. Always verify market conditions and manage risk before trading.</p></div>
+      </section>
 
       <!-- GOLD MULTI-TIMEFRAME SCANNER -->
       <section id="scanner" class="page">
