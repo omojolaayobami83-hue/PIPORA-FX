@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Supported markets
-const SYMBOLS = { XAUUSD: "XAU/USD" };
+const SYMBOLS = { XAUUSD: "XAU/USD", GBPJPY: "GBP/JPY" };
 
 // Supported timeframes
 const INTERVALS = new Set([
@@ -27,7 +27,7 @@ const INTERVALS = new Set([
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
-    app: "PIPORA GOLD",
+    app: "PIPORA GOLD",\n    supportedMarkets: Object.keys(SYMBOLS),
     apiConfigured: Boolean(API_KEY),
     timestamp: new Date().toISOString()
   });
