@@ -953,3 +953,20 @@ button:disabled {
 /* Installable app controls */
 .install-app-button{border:1px solid #00c98d;background:#103629;color:#e8fff6;padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px}
 .install-app-button[hidden]{display:none}
+
+
+/* Clean two-market home dashboard and separate chart page */
+.market-dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:22px 0}
+.market-tile{display:grid;grid-template-columns:54px 1fr;grid-template-areas:"icon copy" "price price" "action action";gap:12px;align-items:center;text-align:left;padding:20px;background:linear-gradient(145deg,#171d25,#0d131b);border:1px solid var(--border);border-radius:14px;color:var(--text);cursor:pointer;transition:border-color .2s,transform .2s}
+.market-tile:hover{border-color:var(--green);transform:translateY(-2px)}
+.market-tile-icon{grid-area:icon;width:48px;height:48px;display:grid;place-items:center;background:#252b33;border-radius:50%;font-size:25px}
+.market-tile-copy{grid-area:copy;display:grid;gap:6px}
+.market-tile-copy strong{font-size:17px}
+.market-tile-copy small{font-size:11px;color:var(--muted)}
+.market-tile-price{grid-area:price;font-size:25px;font-weight:700;letter-spacing:.3px}
+.market-tile-action{grid-area:action;color:var(--green);font-size:12px;font-weight:700;text-align:right;padding-top:10px;border-top:1px solid var(--border)}
+.dashboard-note{padding:16px;background:#111a17;border:1px solid #294b3a;border-radius:10px;color:var(--muted);font-size:12px;line-height:1.7}
+.back-dashboard-button{margin-bottom:18px;padding:9px 13px;border:1px solid var(--border);border-radius:8px;background:#111821;color:var(--text);cursor:pointer}
+.back-dashboard-button:hover{border-color:var(--green);color:var(--green)}
+.market-page-heading{margin-bottom:18px}
+@media(max-width:700px){.market-dashboard-grid{grid-template-columns:1fr;gap:12px}.market-tile{padding:17px}.market-tile-price{font-size:23px}}
