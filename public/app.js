@@ -21,6 +21,11 @@ const MARKETS = {
     digits: 5
   },
 
+  GBPJPY: {
+    symbol: "FX:GBPJPY",
+    digits: 3
+  },
+
   XAUUSD: {
     symbol: "OANDA:XAUUSD",
     digits: 2
@@ -119,8 +124,9 @@ function showPage(pageName) {
     );
   });
 
-  if (pageName === "dashboard") {
+  if (pageName === "market") {
     renderChart();
+    loadMarketData();
   }
 }
 
@@ -129,6 +135,9 @@ document.querySelectorAll("[data-page]").forEach(button => {
     showPage(button.dataset.page);
   });
 });
+
+const backButton = getElement("backToDashboard");
+if (backButton) backButton.addEventListener("click", () => showPage("dashboard"));
 
 
 // ==========================================
@@ -143,7 +152,10 @@ document.querySelectorAll("[data-market]").forEach(button => {
       return;
     }
 
-    selectedMarket = market;\n    showPage("market");\n    setText("marketPageTitle", market === "XAUUSD" ? "GOLD vs USD" : "GBP vs JPY");\n    setText("marketPageSubtitle", market === "XAUUSD" ? "XAUUSD · Gold market analysis" : "GBPJPY · Pound / Yen market analysis");
+    selectedMarket = market;
+    setText("marketPageTitle", market === "XAUUSD" ? "GOLD vs USD" : "GBP vs JPY");
+    setText("marketPageSubtitle", market === "XAUUSD" ? "XAUUSD · Gold market analysis" : "GBPJPY · Pound / Yen market analysis");
+    showPage("market");\n    showPage("market");\n    setText("marketPageTitle", market === "XAUUSD" ? "GOLD vs USD" : "GBP vs JPY");\n    setText("marketPageSubtitle", market === "XAUUSD" ? "XAUUSD · Gold market analysis" : "GBPJPY · Pound / Yen market analysis");
 
     document.querySelectorAll("[data-market]").forEach(item => {
       item.classList.toggle(
@@ -1063,14 +1075,28 @@ function updateGoldSessionClock(){
 const mtfButton=getElement("runMtfScan");if(mtfButton)mtfButton.addEventListener("click",runGoldMtfScan);
 updateGoldSessionClock();setInterval(updateGoldSessionClock,60000);
 
-async function loadDashboardPrices(){\n  for (const market of ["XAUUSD","GBPJPY"]) {\n    const node=getElement("tilePrice"+market); if(!node) continue;\n    try {\n      const q=new URLSearchParams({market,interval:"15min"});\n      const response=await fetch("/api/price?"+q.toString());\n      const data=await response.json();\n      if(!response.ok||!Array.isArray(data.values)||!data.values.length) throw new Error(data.error||"Price unavailable");\n      const price=Number(data.values[0].close);\n      const digits=MARKETS[market].digits;\n      node.textContent=Number.isFinite(price)?price.toLocaleString("en-US",{minimumFractionDigits:digits,maximumFractionDigits:digits}):"Price unavailable";\n    } catch(error) { node.textContent="Price unavailable"; }\n  }\n}\n\nfunction startApp() {
+async function loadDashboardPrices(){\n  for (const market of ["XAUUSD","GBPJPY"]) {\n    const node=getElement("tilePrice"+market); if(!node) continue;\n    try {\n      const q=new URLSearchParams({market,interval:"15min"});\n      const response=await fetch("/api/price?"+q.toString());\n      const data=await response.json();\n      if(!response.ok||!Array.isArray(data.values)||!data.values.length) throw new Error(data.error||"Price unavailable");\n      const price=Number(data.values[0].close);\n      const digits=MARKETS[market].digits;\n      node.textContent=Number.isFinite(price)?price.toLocaleString("en-US",{minimumFractionDigits:digits,maximumFractionDigits:digits}):"Price unavailable";\n    } catch(error) { node.textContent="Price unavailable"; }\n  }\n}\n\nasync function loadDashboardPrices(){
+  for (const market of ["XAUUSD","GBPJPY"]) {
+    const node=getElement("tilePrice"+market);
+    if(!node) continue;
+    try {
+      const q=new URLSearchParams({market,interval:"15min"});
+      const response=await fetch("/api/price?"+q.toString());
+      const data=await response.json();
+      if(!response.ok||!Array.isArray(data.values)||!data.values.length) throw new Error(data.error||"Price unavailable");
+      const price=Number(data.values[0].close);
+      const digits=MARKETS[market].digits;
+      node.textContent=Number.isFinite(price)?price.toLocaleString("en-US",{minimumFractionDigits:digits,maximumFractionDigits:digits}):"Price unavailable";
+    } catch(error) { node.textContent="Price unavailable"; }
+  }
+}
+
+function startApp() {
   resetAnalysis();
 
   renderJournal();
 
-  renderChart();
-
-  loadMarketData();
+  loadDashboardPrices();
   runGoldMtfScan();
 }
 
