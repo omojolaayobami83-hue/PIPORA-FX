@@ -154,8 +154,7 @@ document.querySelectorAll("[data-market]").forEach(button => {
 
     selectedMarket = market;
     setText("marketPageTitle", market === "XAUUSD" ? "GOLD vs USD" : "GBP vs JPY");
-    setText("marketPageSubtitle", market === "XAUUSD" ? "XAUUSD · Gold market analysis" : "GBPJPY · Pound / Yen market analysis");
-    showPage("market");    document.querySelectorAll("[data-market]").forEach(item => {
+    setText("marketPageSubtitle", market === "XAUUSD" ? "XAUUSD · Gold market analysis" : "GBPJPY · Pound / Yen market analysis");    document.querySelectorAll("[data-market]").forEach(item => {
       item.classList.toggle(
         "active",
         item.dataset.market === market
@@ -165,10 +164,7 @@ document.querySelectorAll("[data-market]").forEach(button => {
     setText("chartMarket", market);
 
     resetAnalysis();
-
-    renderChart();
-
-    loadMarketData();
+    showPage("market");
   });
 });
 
