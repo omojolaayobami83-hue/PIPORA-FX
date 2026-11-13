@@ -143,7 +143,7 @@ document.querySelectorAll("[data-market]").forEach(button => {
       return;
     }
 
-    selectedMarket = market;
+    selectedMarket = market;\n    showPage("market");\n    setText("marketPageTitle", market === "XAUUSD" ? "GOLD vs USD" : "GBP vs JPY");\n    setText("marketPageSubtitle", market === "XAUUSD" ? "XAUUSD · Gold market analysis" : "GBPJPY · Pound / Yen market analysis");
 
     document.querySelectorAll("[data-market]").forEach(item => {
       item.classList.toggle(
@@ -1063,7 +1063,7 @@ function updateGoldSessionClock(){
 const mtfButton=getElement("runMtfScan");if(mtfButton)mtfButton.addEventListener("click",runGoldMtfScan);
 updateGoldSessionClock();setInterval(updateGoldSessionClock,60000);
 
-function startApp() {
+\nasync function loadDashboardPrices(){\n  for (const market of ["XAUUSD","GBPJPY"]) {\n    const node=getElement("tilePrice"+market); if(!node) continue;\n    try {\n      const q=new URLSearchParams({market,interval:"15min"});\n      const response=await fetch("/api/price?"+q.toString());\n      const data=await response.json();\n      if(!response.ok||!Array.isArray(data.values)||!data.values.length) throw new Error(data.error||"Price unavailable");\n      const price=Number(data.values[0].close);\n      const digits=MARKETS[market].digits;\n      node.textContent=Number.isFinite(price)?price.toLocaleString("en-US",{minimumFractionDigits:digits,maximumFractionDigits:digits}):"Price unavailable";\n    } catch(error) { node.textContent="Price unavailable"; }\n  }\n}\n\nfunction startApp() {
   resetAnalysis();
 
   renderJournal();
