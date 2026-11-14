@@ -910,7 +910,7 @@ button:disabled {
   }
 
 }
-/* PIPORA GOLD enhancements */
+/* PIPORA FX enhancements */
 .gold-focus{display:flex;flex-direction:column;gap:7px;padding:18px 20px;margin-bottom:22px;background:linear-gradient(110deg,#17271f,#10151d);border:1px solid #31523f;border-radius:12px}
 .gold-focus strong{font-size:17px;color:var(--green);letter-spacing:.7px}
 .gold-focus span{font-size:12px;color:var(--muted)}
