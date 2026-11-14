@@ -35,7 +35,7 @@ const INTERVALS = new Set([
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
-    app: "PIPORA GOLD",
+    app: "PIPORA FX",
     supportedMarkets: Object.keys(SYMBOLS),
     apiConfigured: Boolean(API_KEY),
     timestamp: new Date().toISOString()
@@ -227,7 +227,7 @@ app.get("*", (_req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(
-    `PIPORA GOLD running at http://localhost:${PORT}`
+    `PIPORA FX running at http://localhost:${PORT}`
   );
 
   console.log(
