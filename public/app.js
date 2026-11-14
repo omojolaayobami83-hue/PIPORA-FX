@@ -436,6 +436,10 @@ function calculateRSI(values, period = 14) {
       (averageLoss * (period - 1) + loss) / period;
   }
 
+  if (averageLoss === 0 && averageGain === 0) {
+    return 50;
+  }
+
   if (averageLoss === 0) {
     return 100;
   }
