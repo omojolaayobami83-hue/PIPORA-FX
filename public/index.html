@@ -124,7 +124,7 @@
       </nav>
 
 
-      <div class="pipora-meaning"><strong>What PIPORA means</strong><p><b>P</b>rice <b>I</b>ntelligence · <b>P</b>recision · <b>O</b>pportunity · <b>R</b>isk <b>A</b>wareness</p><small>A brand motto created for focused, disciplined Gold analysis.</small></div>
+      <div class="pipora-meaning"><strong>What PIPORA means</strong><p><b>P</b>rice <b>I</b>ntelligence · <b>P</b>recision · <b>O</b>pportunity · <b>R</b>isk <b>A</b>wareness</p><small>A brand motto for disciplined analysis across Gold and Forex.</small></div>
 
       <!-- SIDEBAR BOTTOM -->
       <div class="sidebar-bottom">
@@ -323,18 +323,18 @@
             <label>Quote currency to account currency conversion<input id="riskConversion" type="number" min="0.000001" step="any" value="1" placeholder="Use 1 only when currencies match"></label>
           </div>
           <button id="calculateRisk" class="primary-button" type="button">Calculate position size</button>
-          <div class="risk-result" aria-live="polite"><strong id="riskAmount">Risk amount: --</strong><span id="riskLots">Estimated lot size: --</span><small id="riskNote">Enter all values. This estimate excludes commission, spread, slippage and currency conversion.</small></div>
+          <div class="risk-result" aria-live="polite"><strong id="riskAmount">Risk amount: --</strong><span id="riskLots">Estimated lot size: --</span><small id="riskNote">Enter all values, including quote-to-account currency conversion. Confirm all contract details with your broker.</small></div>
         </div>
         <div class="scanner-card news-card">
           <h3>Economic News Safety Check</h3>
-          <p class="news-disclaimer">No live economic-calendar feed is connected. Add a known high-impact USD event from your trusted calendar; this tool will warn around the time you enter.</p>
+          <p class="news-disclaimer">No live economic-calendar feed is connected. Add a relevant event from a trusted calendar. USD events can affect Gold and GBPJPY; UK and Japan events can also move GBPJPY.</p>
           <div class="risk-form">
             <label>Event name<input id="newsEventName" type="text" placeholder="e.g. US CPI"></label>
             <label>Event time (your device local time)<input id="newsEventTime" type="datetime-local"></label>
             <label>Impact<select id="newsImpact"><option value="high">High impact</option><option value="medium">Medium impact</option><option value="low">Low impact</option></select></label>
           </div>
           <button id="checkNews" class="primary-button" type="button">Check event risk</button>
-          <div class="news-result" id="newsResult" aria-live="polite">No event entered. Check a reliable economic calendar before trading Gold.</div>
+          <div class="news-result" id="newsResult" aria-live="polite">No event entered. Check a reliable economic calendar before trading either instrument.</div>
         </div>
 
       </section>
@@ -348,11 +348,11 @@
         <div class="section-heading">
 
           <h2>
-            Gold Academy
+            Market Academy
           </h2>
 
           <span>
-            Learn Gold market structure
+            Learn price action and market structure
           </span>
 
         </div>
@@ -483,7 +483,7 @@
 
               Market
 
-              <select id="journalMarket"><option value="XAUUSD">XAUUSD — Gold</option></select>
+              <select id="journalMarket"><option value="XAUUSD">XAUUSD — Gold</option><option value="GBPJPY">GBPJPY — Pound / Yen</option></select>
 
             </label>
 
