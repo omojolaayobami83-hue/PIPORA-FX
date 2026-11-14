@@ -1,8 +1,8 @@
-# PIPORA GOLD
+# PIPORA FX
 
 **Price Intelligence · Precision · Opportunity · Risk Awareness**
 
-PIPORA GOLD is an educational market-analysis web app focused on **XAUUSD (Gold)** and **GBPJPY**. It is a decision-support tool, not an automated trading system and not financial advice.
+PIPORA FX is an educational market-analysis web app focused on **XAUUSD (Gold)** and **GBPJPY**. It is a decision-support tool, not an automated trading system and not financial advice.
 
 ## Current features
 
