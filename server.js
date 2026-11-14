@@ -9,6 +9,12 @@ const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.TWELVE_DATA_API_KEY;
 const CACHE_TTL_MS = 15000;
 const marketCache = new Map();
+const RATE_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX = 45;
+const requestBuckets = new Map();
+
+// Render and similar hosts sit behind a trusted reverse proxy.
+app.set("trust proxy", 1);
 
 app.use(express.json());
 
@@ -65,6 +71,29 @@ app.get("/api/price", async (req, res) => {
     return res.status(400).json({
       error: "Unsupported timeframe."
     });
+  }
+
+  // Basic per-client protection for the shared data-provider quota.
+  const now = Date.now();
+  const clientKey = req.ip || req.socket.remoteAddress || "unknown";
+  let bucket = requestBuckets.get(clientKey);
+  if (!bucket || now - bucket.startedAt >= RATE_WINDOW_MS) {
+    bucket = { startedAt: now, count: 0 };
+  }
+  bucket.count += 1;
+  requestBuckets.set(clientKey, bucket);
+  if (bucket.count > RATE_LIMIT_MAX) {
+    res.set("Retry-After", String(Math.ceil((RATE_WINDOW_MS - (now - bucket.startedAt)) / 1000)));
+    return res.status(429).json({
+      error: "Too many market-data requests. Please wait a minute and try again."
+    });
+  }
+
+  // Periodically remove expired client buckets to keep memory bounded.
+  if (requestBuckets.size > 1000) {
+    for (const [key, value] of requestBuckets) {
+      if (now - value.startedAt >= RATE_WINDOW_MS) requestBuckets.delete(key);
+    }
   }
 
   // Check API key
