@@ -1,7 +1,7 @@
 {
-  "name": "pipora-gold",
+  "name": "pipora-fx",
   "version": "1.0.0",
-  "description": "PIPORA GOLD - multi-market technical analysis and risk-awareness tools",
+  "description": "PIPORA FX - multi-market technical analysis and risk-awareness tools",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
