@@ -1,5 +1,5 @@
 /* ==========================================
-   PIPORA GOLD
+   PIPORA FX
    SMART MARKET INTELLIGENCE
    Market Analysis Engine
 ========================================== */
@@ -332,7 +332,7 @@ async function loadMarketData() {
 
     setStatus("Live Data Connected");
 
-    setText("priceDescription", "Provider data received");
+    setText("priceDescription", "Twelve Data candle close · " + (candles[candles.length - 1]?.datetime || "timestamp unavailable"));
 
     analyzeMarket();
 
@@ -394,15 +394,12 @@ function calculateATR(data, period = 14) {
   if (data.length <= period) return null;
   const ranges = [];
   for (let i = 1; i < data.length; i++) {
-    const current = data[i], previous = data[i - 1];
-    ranges.push(Math.max(
-      current.high - current.low,
-      Math.abs(current.high - previous.close),
-      Math.abs(current.low - previous.close)
-    ));
+    const c = data[i], p = data[i - 1];
+    ranges.push(Math.max(c.high-c.low,Math.abs(c.high-p.close),Math.abs(c.low-p.close)));
   }
-  const recent = ranges.slice(-period);
-  return recent.reduce((sum, value) => sum + value, 0) / recent.length;
+  let atr = ranges.slice(0,period).reduce((a,b)=>a+b,0)/period;
+  for(let i=period;i<ranges.length;i++) atr=((atr*(period-1))+ranges[i])/period;
+  return atr;
 }
 
 function calculateRSI(values, period = 14) {
@@ -501,93 +498,19 @@ function findSwingPoints(data, strength = 2) {
 
 
 function analyzeStructure(data) {
-  const swings = findSwingPoints(data);
-
-  const highs = swings.highs;
-  const lows = swings.lows;
-
-  const last = data[data.length - 1];
-
-  if (highs.length < 2 || lows.length < 2) {
-    return {
-      trend: "UNCLEAR",
-      structure: "UNCLEAR",
-      bos: "NOT CONFIRMED",
-      choch: "NOT CONFIRMED",
-      highs,
-      lows
-    };
-  }
-
-  const previousHigh = highs[highs.length - 2];
-  const latestHigh = highs[highs.length - 1];
-
-  const previousLow = lows[lows.length - 2];
-  const latestLow = lows[lows.length - 1];
-
-  const higherHigh = latestHigh.price > previousHigh.price;
-  const higherLow = latestLow.price > previousLow.price;
-
-  const lowerHigh = latestHigh.price < previousHigh.price;
-  const lowerLow = latestLow.price < previousLow.price;
-
-  let trend = "RANGING";
-
-  if (higherHigh && higherLow) {
-    trend = "BULLISH";
-  } else if (lowerHigh && lowerLow) {
-    trend = "BEARISH";
-  }
-
-  const previousSwingHigh = highs
-    .filter(point => point.index < data.length - 1)
-    .slice(-1)[0];
-
-  const previousSwingLow = lows
-    .filter(point => point.index < data.length - 1)
-    .slice(-1)[0];
-
-  let bos = "NOT CONFIRMED";
-  let choch = "NOT CONFIRMED";
-
-  if (previousSwingHigh && last.close > previousSwingHigh.price) {
-    bos = "BULLISH";
-
-    if (trend === "BEARISH") {
-      choch = "POSSIBLE BULLISH SHIFT";
-    }
-  }
-
-  if (previousSwingLow && last.close < previousSwingLow.price) {
-    bos = "BEARISH";
-
-    if (trend === "BULLISH") {
-      choch = "POSSIBLE BEARISH SHIFT";
-    }
-  }
-
-  let structure = "MIXED STRUCTURE";
-
-  if (higherHigh && higherLow) {
-    structure = "HH / HL";
-  } else if (lowerHigh && lowerLow) {
-    structure = "LH / LL";
-  }
-
-  return {
-    trend,
-    structure,
-    bos,
-    choch,
-    highs,
-    lows
-  };
+  const swings=findSwingPoints(data,2), highs=swings.highs, lows=swings.lows;
+  if(highs.length<2||lows.length<2)return{trend:"UNCLEAR",structure:"UNCLEAR",bos:"NOT CONFIRMED",choch:"NOT CONFIRMED",highs,lows};
+  const ph=highs[highs.length-2],lh=highs[highs.length-1],pl=lows[lows.length-2],ll=lows[lows.length-1];
+  const hh=lh.price>ph.price,hl=ll.price>pl.price,lhLower=lh.price<ph.price,llLower=ll.price<pl.price;
+  let trend="RANGING",structure="MIXED STRUCTURE";
+  if(hh&&hl){trend="BULLISH";structure="HH / HL";}else if(lhLower&&llLower){trend="BEARISH";structure="LH / LL";}
+  const last=data[data.length-1],bullishBreak=last.close>lh.price,bearishBreak=last.close<ll.price;
+  const bos=bullishBreak?"BULLISH":bearishBreak?"BEARISH":"NOT CONFIRMED";
+  let choch="NOT CONFIRMED";
+  if(bullishBreak&&trend==="BEARISH")choch="POSSIBLE BULLISH SHIFT";
+  if(bearishBreak&&trend==="BULLISH")choch="POSSIBLE BEARISH SHIFT";
+  return{trend,structure,bos,choch,highs,lows};
 }
-
-
-// ==========================================
-// LIQUIDITY ESTIMATE
-// ==========================================
 
 function analyzeLiquidity(data, swings) {
   if (data.length < 22) return "Insufficient candles";
@@ -636,126 +559,21 @@ function detectPotentialOrderBlock(data, structure) {
 // ==========================================
 
 function analyzeMarket() {
-  if (candles.length < 30) {
-    resetAnalysis();
-    return;
-  }
-
-  const closes = candles.map(candle => candle.close);
-
-  const last = candles[candles.length - 1];
-
-  const ema9Values = calculateEMA(closes, 9);
-  const ema21Values = calculateEMA(closes, 21);
-
-  const ema9 = ema9Values[ema9Values.length - 1];
-  const ema21 = ema21Values[ema21Values.length - 1];
-
-  const rsi = calculateRSI(closes, 14);
-  const atr = calculateATR(candles, 14);
-
-  const structure = analyzeStructure(candles);
-
-  const recent = candles.slice(-21, -1);
-
-  const support = Math.min(
-    ...recent.map(candle => candle.low)
-  );
-
-  const resistance = Math.max(
-    ...recent.map(candle => candle.high)
-  );
-
-  const emaTrend =
-    ema9 > ema21
-      ? "BULLISH"
-      : ema9 < ema21
-        ? "BEARISH"
-        : "NEUTRAL";
-
-  const priceTrend =
-    last.close > ema9
-      ? "ABOVE EMA 9"
-      : "BELOW EMA 9";
-
-  const trendConfirmed =
-    structure.trend === emaTrend &&
-    structure.trend !== "RANGING" &&
-    structure.trend !== "UNCLEAR";
-
-  // Show market price.
-  setText("marketPrice", formatPrice(last.close));
-
-  // Show trend.
-  setText("trend", structure.trend);
-
-  setColor(
-    "trend",
-    structure.trend === "BULLISH"
-      ? "#00e6a0"
-      : structure.trend === "BEARISH"
-        ? "#ff5364"
-        : "#f5c451"
-  );
-
-  setText("structure", structure.structure);
-
-  setText(
-    "rsi",
-    rsi === null ? "--" : rsi.toFixed(2)
-  );
-
-  setText("ema9", formatPrice(ema9));
-
-  setText("ema21", formatPrice(ema21));
-
-  setText(
-    "rsiIndicator",
-    rsi === null ? "--" : rsi.toFixed(2)
-  );
-  setText("atrValue", atr === null ? "--" : formatPrice(atr));
-  setText("fairValueGap", detectFairValueGap(candles));
-  setText("supplyDemand", detectPotentialOrderBlock(candles, structure));
-
-  setText(
-    "trendConfirmation",
-    trendConfirmed ? "ALIGNED" : "NOT ALIGNED"
-  );
-
-  setText("bos", structure.bos);
-
-  setText("choch", structure.choch);
-
-  setText(
-    "liquidity",
-    analyzeLiquidity(candles, structure)
-  );
-
-  setText(
-    "supplyDemand",
-    "Zones require confirmation"
-  );
-
-  setText("support", formatPrice(support));
-
-  setText("resistance", formatPrice(resistance));
-
-  // Do not automatically recommend a trade.
-  // Require multiple conditions before displaying a candidate.
-  evaluateSetup({
-    last,
-    ema9,
-    ema21,
-    rsi,
-    trend: structure.trend,
-    structure: structure.structure,
-    bos: structure.bos,
-    trendConfirmed,
-    support,
-    resistance,
-    priceTrend,
-    atr
-  });
+  if(candles.length<30){resetAnalysis();return;}
+  const closes=candles.map(c=>c.close),last=candles[candles.length-1];
+  const e9=calculateEMA(closes,9),e21=calculateEMA(closes,21),ema9=e9[e9.length-1],ema21=e21[e21.length-1];
+  const rsi=calculateRSI(closes,14),atr=calculateATR(candles,14),structure=analyzeStructure(candles);
+  const recent=candles.slice(-21,-1),support=Math.min(...recent.map(c=>c.low)),resistance=Math.max(...recent.map(c=>c.high));
+  const emaAligned=(ema9>ema21&&structure.trend==="BULLISH")||(ema9<ema21&&structure.trend==="BEARISH");
+  const trendConfirmed=emaAligned&&(structure.trend==="BULLISH"||structure.trend==="BEARISH"),priceAboveFastEma=last.close>ema9;
+  setText("marketPrice",formatPrice(last.close));setText("trend",structure.trend);
+  setColor("trend",structure.trend==="BULLISH"?"#00e6a0":structure.trend==="BEARISH"?"#ff5364":"#f5c451");
+  setText("structure",structure.structure);setText("rsi",rsi===null?"--":rsi.toFixed(2));
+  setText("ema9",formatPrice(ema9));setText("ema21",formatPrice(ema21));setText("rsiIndicator",rsi===null?"--":rsi.toFixed(2));setText("atrValue",atr===null?"--":formatPrice(atr));
+  setText("trendConfirmation",trendConfirmed?"ALIGNED":"NOT ALIGNED");setText("bos",structure.bos);setText("choch",structure.choch);
+  setText("liquidity",analyzeLiquidity(candles,structure));setText("fairValueGap",detectFairValueGap(candles));
+  setText("supplyDemand",detectPotentialOrderBlock(candles,structure));setText("support",formatPrice(support));setText("resistance",formatPrice(resistance));
+  evaluateSetup({last,ema9,ema21,rsi,trend:structure.trend,bos:structure.bos,trendConfirmed,emaAligned,priceAboveFastEma,atr});
 }
 
 
@@ -763,128 +581,39 @@ function analyzeMarket() {
 // TRADE SETUP EVALUATION
 // ==========================================
 
-function evaluateSetup(data) {
-  const {
-    last,
-    ema9,
-    ema21,
-    rsi,
-    trend,
-    bos,
-    trendConfirmed,
-    support,
-    resistance,
-    atr
-  } = data;
-
-  let decision = "WAIT";
-
-  let explanation =
-    "No sufficiently confirmed setup. Wait for clearer price action.";
-
-  // These are educational filters, not guaranteed signals.
-  const isGold = selectedMarket === "XAUUSD";
-  const bullishRsiFloor = isGold ? 52 : 51;
-  const rsiCeiling = isGold ? 68 : 67;
-  const bearishRsiCeiling = isGold ? 48 : 49;
-  const rsiFloor = isGold ? 32 : 33;
-  const candleRange = last.high - last.low;
-  const volatilityUsable = Number.isFinite(atr) && atr > 0 &&
-    candleRange <= atr * (isGold ? 2.8 : 2.5);
-
-  const bullishSetup =
-    trend === "BULLISH" &&
-    trendConfirmed &&
-    bos === "BULLISH" &&
-    rsi !== null &&
-    rsi >= bullishRsiFloor &&
-    rsi < rsiCeiling &&
-    last.close > ema9 &&
-    ema9 > ema21 &&
-    volatilityUsable;
-
-  const bearishSetup =
-    trend === "BEARISH" &&
-    trendConfirmed &&
-    bos === "BEARISH" &&
-    rsi !== null &&
-    rsi <= bearishRsiCeiling &&
-    rsi > rsiFloor &&
-    last.close < ema9 &&
-    ema9 < ema21 &&
-    volatilityUsable;
-
-  if (bullishSetup) {
-    decision = "BUY CANDIDATE";
-
-    explanation =
-      "Bullish structure, EMA alignment, RSI and a bullish break are aligned. Check a retest, volatility, spread, relevant news and risk. This is a candidate, not an instruction.";
-  } else if (bearishSetup) {
-    decision = "SELL CANDIDATE";
-
-    explanation =
-      "Bearish structure, EMA alignment, RSI and a bearish break are aligned. Check a retest, volatility, spread, relevant news and risk. This is a candidate, not an instruction.";
+function evaluateSetup(d) {
+  const {last,ema9,ema21,rsi,trend,bos,trendConfirmed,emaAligned,priceAboveFastEma,atr}=d;
+  const isGold=selectedMarket==="XAUUSD",range=last.high-last.low;
+  const volatilityUsable=Number.isFinite(atr)&&atr>0&&range<=atr*(isGold?2.8:2.5);
+  const bullishRsi=rsi!==null&&rsi>=52&&rsi<=68,bearishRsi=rsi!==null&&rsi>=32&&rsi<=48;
+  const checks=[
+    {label:"Directional structure",pass:trend==="BULLISH"||trend==="BEARISH",detail:trend},
+    {label:"EMA 9/21 alignment",pass:emaAligned,detail:ema9>ema21?"EMA 9 above EMA 21":"EMA 9 below EMA 21"},
+    {label:"Price vs EMA 9",pass:trend==="BULLISH"?priceAboveFastEma:trend==="BEARISH"?!priceAboveFastEma:false,detail:priceAboveFastEma?"Above EMA 9":"Below EMA 9"},
+    {label:"RSI momentum",pass:trend==="BULLISH"?bullishRsi:trend==="BEARISH"?bearishRsi:false,detail:rsi===null?"Unavailable":rsi.toFixed(2)},
+    {label:"Break of structure",pass:bos===trend&&(trend==="BULLISH"||trend==="BEARISH"),detail:bos},
+    {label:"ATR volatility filter",pass:volatilityUsable,detail:volatilityUsable?"Within filter":"Wide candle / ATR unavailable"}
+  ];
+  const score=checks.filter(x=>x.pass).length;
+  let decision="WAIT",explanation="Conditions are mixed. Wait for stronger confirmation; no trade candidate is active.";
+  if(trendConfirmed&&bos==="BULLISH"&&trend==="BULLISH"&&score>=5&&bullishRsi&&priceAboveFastEma&&ema9>ema21&&volatilityUsable){
+    decision="BUY CANDIDATE";explanation="Bullish structure, EMA alignment, price position, RSI and a bullish candle close beyond the latest confirmed swing meet the rule filters. Wait for a retest and check spread, news and risk.";
+  }else if(trendConfirmed&&bos==="BEARISH"&&trend==="BEARISH"&&score>=5&&bearishRsi&&!priceAboveFastEma&&ema9<ema21&&volatilityUsable){
+    decision="SELL CANDIDATE";explanation="Bearish structure, EMA alignment, price position, RSI and a bearish candle close beyond the latest confirmed swing meet the rule filters. Wait for a retest and check spread, news and risk.";
   }
-
-  const badge = getElement("signal");
-
-  if (badge) {
-    badge.textContent = decision;
-
-    badge.className = "signal-badge";
-
-    if (decision === "BUY CANDIDATE") {
-      badge.classList.add("buy");
-    } else if (decision === "SELL CANDIDATE") {
-      badge.classList.add("sell");
-    } else {
-      badge.classList.add("wait");
-    }
-  }
-
-  setText("signalExplanation", explanation);
-
-  // Display possible reference levels, not guaranteed trade orders.
-  if (decision === "BUY CANDIDATE") {
-    setText("entry", formatPrice(last.close));
-
-    setText(
-      "stopLoss",
-      formatPrice(support)
-    );
-
-    setText(
-      "takeProfit",
-      formatPrice(resistance)
-    );
-
-  } else if (decision === "SELL CANDIDATE") {
-    setText("entry", formatPrice(last.close));
-
-    setText(
-      "stopLoss",
-      formatPrice(resistance)
-    );
-
-    setText(
-      "takeProfit",
-      formatPrice(support)
-    );
-
-  } else {
-    setText("entry", "--");
-    setText("stopLoss", "--");
-    setText("takeProfit", "--");
-  }
+  const badge=getElement("signal");
+  if(badge){badge.textContent=decision;badge.className="signal-badge "+(decision==="BUY CANDIDATE"?"buy":decision==="SELL CANDIDATE"?"sell":"wait");}
+  setText("signalExplanation",explanation);setText("analysisScore",score+" / 6 confluence checks");
+  setText("analysisReasons",checks.map(x=>(x.pass?"✓ ":"• ")+x.label+": "+x.detail).join(" · "));
+  if(decision==="BUY CANDIDATE"){const sl=last.close-atr*1.5;setText("entry",formatPrice(last.close));setText("stopLoss",formatPrice(sl));setText("takeProfit",formatPrice(last.close+(last.close-sl)*2));}
+  else if(decision==="SELL CANDIDATE"){const sl=last.close+atr*1.5;setText("entry",formatPrice(last.close));setText("stopLoss",formatPrice(sl));setText("takeProfit",formatPrice(last.close-(sl-last.close)*2));}
+  else{setText("entry","--");setText("stopLoss","--");setText("takeProfit","--");}
 }
-
-
-// ==========================================
-// RESET ANALYSIS
-// ==========================================
 
 function resetAnalysis() {
   setText("marketPrice", "--");
+  setText("analysisScore", "--");
+  setText("analysisReasons", "Analysis details will appear when valid candles load.");
   setText("trend", "WAIT");
   setText("structure", "WAIT");
   setText("rsi", "--");
@@ -1062,7 +791,7 @@ if (exportJournalButton) {
 // ==========================================
 
 
-/* PIPORA GOLD: top-down multi-timeframe analysis */
+/* PIPORA FX: top-down multi-timeframe analysis */
 async function fetchTimeframeAnalysis(interval) {
   const q=new URLSearchParams({market:selectedMarket,interval});
   const response=await fetch("/api/price?"+q.toString());
@@ -1129,7 +858,7 @@ function startApp() {
 
 document.addEventListener("DOMContentLoaded", startApp);
 
-// PIPORA GOLD risk calculator: broker contract size is user supplied.
+// PIPORA FX risk calculator: broker contract size is user supplied.
 function calculateGoldRisk(){
   const balance=Number(getElement("riskBalance")?.value);
   const riskPct=Number(getElement("riskPercent")?.value);
@@ -1198,7 +927,7 @@ window.addEventListener("beforeinstallprompt",event=>{
 if(installAppButton){
   installAppButton.addEventListener("click",async()=>{
     if(!piporaInstallPrompt){
-      alert("To install PIPORA GOLD, open your browser menu and choose 'Install app' or 'Add to Home screen'.");
+      alert("To install PIPORA FX, open your browser menu and choose 'Install app' or 'Add to Home screen'.");
       return;
     }
     piporaInstallPrompt.prompt();
