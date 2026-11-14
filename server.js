@@ -7,6 +7,8 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.TWELVE_DATA_API_KEY;
+const CACHE_TTL_MS = 15000;
+const marketCache = new Map();
 
 app.use(express.json());
 
@@ -75,6 +77,13 @@ app.get("/api/price", async (req, res) => {
   }
 
   try {
+    const cacheKey = market + ":" + interval;
+    const cached = marketCache.get(cacheKey);
+    if (cached && Date.now() - cached.savedAt < CACHE_TTL_MS) {
+      res.set("X-PIPORA-Cache", "HIT");
+      return res.json(cached.payload);
+    }
+
     const url = new URL(
       "https://api.twelvedata.com/time_series"
     );
@@ -99,7 +108,14 @@ app.get("/api/price", async (req, res) => {
       API_KEY
     );
 
-    const response = await fetch(url);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    let response;
+    try {
+      response = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     const data = await response.json();
 
@@ -141,23 +157,18 @@ app.get("/api/price", async (req, res) => {
       );
 
     // Send market data to frontend
-    res.json({
+    const payload = {
       market,
-
       providerSymbol: SYMBOLS[market],
-
       interval,
-
-      currency:
-        data.meta && data.meta.currency,
-
-      exchange:
-        data.meta && data.meta.exchange,
-
+      currency: data.meta && data.meta.currency,
+      exchange: data.meta && data.meta.exchange,
       values,
-
       fetchedAt: new Date().toISOString()
-    });
+    };
+    marketCache.set(cacheKey, { savedAt: Date.now(), payload });
+    res.set("X-PIPORA-Cache", "MISS");
+    res.json(payload);
 
   } catch (error) {
     console.error(
@@ -166,8 +177,9 @@ app.get("/api/price", async (req, res) => {
     );
 
     res.status(502).json({
-      error:
-        "Could not reach the market data provider."
+      error: error.name === "AbortError"
+        ? "Market data provider timed out. Please try again shortly."
+        : "Could not reach the market data provider."
     });
   }
 });
