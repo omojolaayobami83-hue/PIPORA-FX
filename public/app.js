@@ -943,48 +943,28 @@ function getJournalEntries() {
 
 function renderJournal() {
   const container = getElement("journalEntries");
-
-  if (!container) {
-    return;
-  }
-
+  if (!container) return;
   container.replaceChildren();
-
   const entries = getJournalEntries();
-
-  if (entries.length === 0) {
+  if (!entries.length) {
     const empty = document.createElement("p");
-
     empty.textContent = "No journal entries yet.";
-
     empty.style.color = "#8995a5";
-
     container.appendChild(empty);
-
     return;
   }
-
   entries.slice().reverse().forEach(entry => {
     const card = document.createElement("div");
-
     card.className = "journal-entry";
-
     const title = document.createElement("strong");
-
-    title.textContent =
-      `${entry.market} — ${entry.direction}`;
-
+    title.textContent = `${entry.market} — ${entry.direction}`;
+    const details = document.createElement("p");
+    details.textContent = `Entry: ${entry.entry || "—"} | Exit: ${entry.exit || "—"} | P/L: ${entry.pnl === "" || entry.pnl == null ? "Not recorded" : entry.pnl}`;
     const notes = document.createElement("p");
-
-    notes.textContent =
-      `Entry: ${entry.entry || "Not entered"} | ${entry.notes || "No notes"}`;
-
+    notes.textContent = entry.notes || "No notes recorded.";
     const date = document.createElement("p");
-
-    date.textContent = entry.date;
-
-    card.append(title, notes, date);
-
+    date.textContent = entry.date || "";
+    card.append(title, details, notes, date);
     container.appendChild(card);
   });
 }
@@ -999,20 +979,30 @@ if (saveJournalButton) {
     const direction = getElement("journalDirection").value;
 
     const entryValue = getElement("journalEntry").value.trim();
-
+    const exitValue = getElement("journalExit").value.trim();
+    const pnlValue = getElement("journalPnl").value.trim();
     const notes = getElement("journalNotes").value.trim();
 
-    if (entryValue && !Number.isFinite(Number(entryValue))) {
+    if (!entryValue || !Number.isFinite(Number(entryValue))) {
       alert("Please enter a valid entry price.");
+      return;
+    }
+    if (exitValue && !Number.isFinite(Number(exitValue))) {
+      alert("Please enter a valid exit price.");
+      return;
+    }
+    if (pnlValue && !Number.isFinite(Number(pnlValue))) {
+      alert("Please enter a valid profit or loss amount.");
       return;
     }
 
     const entries = getJournalEntries();
-
     entries.push({
       market,
       direction,
       entry: entryValue,
+      exit: exitValue,
+      pnl: pnlValue,
       notes,
       date: new Date().toLocaleString()
     });
@@ -1024,6 +1014,8 @@ if (saveJournalButton) {
       );
 
       getElement("journalEntry").value = "";
+      getElement("journalExit").value = "";
+      getElement("journalPnl").value = "";
       getElement("journalNotes").value = "";
 
       renderJournal();
@@ -1040,6 +1032,30 @@ if (saveJournalButton) {
   });
 }
 
+
+
+const exportJournalButton = getElement("exportJournal");
+if (exportJournalButton) {
+  exportJournalButton.addEventListener("click", () => {
+    const rows = getJournalEntries();
+    if (!rows.length) {
+      alert("There are no journal entries to export yet.");
+      return;
+    }
+    const columns = ["date", "market", "direction", "entry", "exit", "pnl", "notes"];
+    const quote = value => '"' + String(value ?? "").replace(/"/g, '""') + '"';
+    const csv = [columns.join(","), ...rows.map(row => columns.map(key => quote(row[key])).join(","))].join("\r\n");
+    const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "pipora-gold-trading-journal.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  });
+}
 
 // ==========================================
 // START APPLICATION
