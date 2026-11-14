@@ -605,6 +605,32 @@ function analyzeLiquidity(data, swings) {
 }
 
 
+function detectFairValueGap(data) {
+  const start = Math.max(2, data.length - 12);
+  for (let i = data.length - 1; i >= start; i--) {
+    const left = data[i - 2];
+    const right = data[i];
+    if (right.low > left.high) return "Bullish FVG " + formatPrice(left.high) + "–" + formatPrice(right.low);
+    if (right.high < left.low) return "Bearish FVG " + formatPrice(right.high) + "–" + formatPrice(left.low);
+  }
+  return "No recent 3-candle gap";
+}
+
+function detectPotentialOrderBlock(data, structure) {
+  if (structure.bos !== "BULLISH" && structure.bos !== "BEARISH") return "No confirmed break · not mapped";
+  const start = Math.max(0, data.length - 12);
+  for (let i = data.length - 2; i >= start; i--) {
+    const candle = data[i];
+    if (structure.bos === "BULLISH" && candle.close < candle.open) {
+      return "Potential demand " + formatPrice(candle.low) + "–" + formatPrice(candle.high);
+    }
+    if (structure.bos === "BEARISH" && candle.close > candle.open) {
+      return "Potential supply " + formatPrice(candle.low) + "–" + formatPrice(candle.high);
+    }
+  }
+  return "No clear opposing candle";
+}
+
 // ==========================================
 // MAIN ANALYSIS
 // ==========================================
@@ -687,6 +713,9 @@ function analyzeMarket() {
     "rsiIndicator",
     rsi === null ? "--" : rsi.toFixed(2)
   );
+  setText("atrValue", atr === null ? "--" : formatPrice(atr));
+  setText("fairValueGap", detectFairValueGap(candles));
+  setText("supplyDemand", detectPotentialOrderBlock(candles, structure));
 
   setText(
     "trendConfirmation",
@@ -863,6 +892,8 @@ function resetAnalysis() {
   setText("ema9", "--");
   setText("ema21", "--");
   setText("rsiIndicator", "--");
+  setText("atrValue", "--");
+  setText("fairValueGap", "WAIT");
 
   setText("trendConfirmation", "WAIT");
 
