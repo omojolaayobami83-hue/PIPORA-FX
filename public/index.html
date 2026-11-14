@@ -16,7 +16,7 @@
   >
 
   <title>PIPORA GOLD | Smart Market Intelligence</title>
-  <meta name="description" content="PIPORA GOLD is a focused XAUUSD market analysis and trading journal tool.">
+  <meta name="description" content="PIPORA GOLD brings technical market analysis, multi-timeframe context and risk tools for XAUUSD and GBPJPY.">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/pipora-icon.svg" type="image/svg+xml">
 
@@ -293,7 +293,7 @@
 
       <!-- GOLD MULTI-TIMEFRAME SCANNER -->
       <section id="scanner" class="page">
-        <div class="section-heading"><h2>Gold Intelligence Scanner</h2><span>Top-down XAUUSD analysis</span></div>
+        <div class="section-heading"><h2>Multi-timeframe Market Scanner</h2><span>Choose Gold or GBPJPY on the dashboard, then scan its 4H, 1H, 15M and 5M context</span></div>
         <div class="scanner-card">
           <p>Higher timeframes provide context; lower timeframes help refine timing. A mixed reading means WAIT.</p>
           <div class="mtf-grid">
@@ -303,7 +303,7 @@
             <div class="mtf-card"><small>5M · ENTRY TIMING</small><strong id="mtf5m">SCANNING</strong><span id="mtf5mNote">Trend and structure</span></div>
           </div>
           <div class="mtf-verdict"><span>TOP-DOWN VERDICT</span><strong id="mtfVerdict">WAITING FOR SCAN</strong><p id="mtfExplanation">The scanner compares four timeframes before showing a directional view.</p></div>
-          <button id="runMtfScan" class="primary-button" type="button">Run Gold scan</button>
+          <button id="runMtfScan" class="primary-button" type="button">Run XAUUSD scan</button>
           <p id="mtfUpdated" class="card-description"></p>
         </div>
         <div class="scanner-card session-card">
@@ -313,13 +313,14 @@
         </div>
 
         <div class="scanner-card risk-card">
-          <h3>Gold Risk Calculator</h3>
-          <p>Estimate position size before a trade. Enter your broker's XAUUSD contract size; it is not the same at every broker.</p>
+          <h3>Multi-market Risk Calculator</h3>
+          <p>Estimate position size for the selected instrument. Use your broker's contract size and the quote-currency conversion into your account currency. Never guess these values.</p>
           <div class="risk-form">
             <label>Account balance (account currency)<input id="riskBalance" type="number" min="0" step="any" placeholder="e.g. 100"></label>
             <label>Risk per trade (%)<input id="riskPercent" type="number" min="0.01" max="100" step="any" value="1"></label>
-            <label>Stop-loss distance (Gold price dollars)<input id="riskDistance" type="number" min="0.01" step="any" placeholder="e.g. 5.00"></label>
-            <label>Contract size (Gold units per 1.00 lot)<input id="riskContract" type="number" min="0.01" step="any" placeholder="Check your broker's XAUUSD specification"></label>
+            <label>Stop-loss distance (price units)<input id="riskDistance" type="number" min="0.00001" step="any" placeholder="Enter the price difference, not pips"></label>
+            <label>Contract size (quote-currency units per 1.00 lot)<input id="riskContract" type="number" min="0.01" step="any" placeholder="Check your broker's instrument specification"></label>
+            <label>Quote currency to account currency conversion<input id="riskConversion" type="number" min="0.000001" step="any" value="1" placeholder="Use 1 only when currencies match"></label>
           </div>
           <button id="calculateRisk" class="primary-button" type="button">Calculate position size</button>
           <div class="risk-result" aria-live="polite"><strong id="riskAmount">Risk amount: --</strong><span id="riskLots">Estimated lot size: --</span><small id="riskNote">Enter all values. This estimate excludes commission, spread, slippage and currency conversion.</small></div>
