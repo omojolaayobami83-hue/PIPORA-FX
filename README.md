@@ -15,6 +15,7 @@ PIPORA GOLD is an educational market-analysis web app focused on **XAUUSD (Gold)
 - Manual event-time safety checker (not a live economic calendar).
 - Local trade journal with entry, exit, realised P/L, notes and CSV export.
 - Installable PWA shell for supported browsers; offline shell does not provide live market data.
+- Initial privacy and terms/risk notice pages at `/privacy.html` and `/terms.html` (review these for your jurisdiction before public commercial release).
 
 ## Run locally
 
