@@ -267,6 +267,7 @@
                 <div class="indicator-row"><span>EMA 9</span><strong id="ema9">--</strong></div>
                 <div class="indicator-row"><span>EMA 21</span><strong id="ema21">--</strong></div>
                 <div class="indicator-row"><span>RSI 14</span><strong id="rsiIndicator">--</strong></div>
+                <div class="indicator-row"><span>ATR 14</span><strong id="atrValue">--</strong></div>
                 <div class="indicator-row"><span>Trend Confirmation</span><strong id="trendConfirmation">WAIT</strong></div>
               </div>
             </div>
@@ -275,8 +276,9 @@
               <div class="structure-list">
                 <div class="indicator-row"><span>Break of Structure</span><strong id="bos">WAIT</strong></div>
                 <div class="indicator-row"><span>CHOCH</span><strong id="choch">WAIT</strong></div>
-                <div class="indicator-row"><span>Liquidity</span><strong id="liquidity">WAIT</strong></div>
-                <div class="indicator-row"><span>Supply / Demand</span><strong id="supplyDemand">WAIT</strong></div>
+                <div class="indicator-row"><span>Liquidity Sweep</span><strong id="liquidity">WAIT</strong></div>
+                <div class="indicator-row"><span>Fair Value Gap</span><strong id="fairValueGap">WAIT</strong></div>
+                <div class="indicator-row"><span>Potential Order Block</span><strong id="supplyDemand">WAIT</strong></div>
               </div>
             </div>
           </div>
@@ -320,7 +322,7 @@
             <label>Risk per trade (%)<input id="riskPercent" type="number" min="0.01" max="100" step="any" value="1"></label>
             <label>Stop-loss distance (price units)<input id="riskDistance" type="number" min="0.00001" step="any" placeholder="Enter the price difference, not pips"></label>
             <label>Contract size (quote-currency units per 1.00 lot)<input id="riskContract" type="number" min="0.01" step="any" placeholder="Check your broker's instrument specification"></label>
-            <label>Quote currency to account currency conversion<input id="riskConversion" type="number" min="0.000001" step="any" value="1" placeholder="Use 1 only when currencies match"></label>
+            <label>Quote currency to account currency conversion<input id="riskConversion" type="number" min="0.000001" step="any" placeholder="Enter 1 only when currencies match"></label>
           </div>
           <button id="calculateRisk" class="primary-button" type="button">Calculate position size</button>
           <div class="risk-result" aria-live="polite"><strong id="riskAmount">Risk amount: --</strong><span id="riskLots">Estimated lot size: --</span><small id="riskNote">Enter all values, including quote-to-account currency conversion. Confirm all contract details with your broker.</small></div>
