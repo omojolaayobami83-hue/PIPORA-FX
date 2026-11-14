@@ -524,14 +524,21 @@
 
 
             <label>
+              Exit Price
+              <input id="journalExit" type="number" step="any" placeholder="Optional exit price">
+            </label>
 
+            <label>
+              Realised profit / loss (account currency)
+              <input id="journalPnl" type="number" step="any" placeholder="e.g. 2.50 or -1.20">
+            </label>
+
+            <label>
               Trade Notes
-
               <textarea
                 id="journalNotes"
-                placeholder="Why did you take this trade?"
+                placeholder="Setup, entry reason, risk, what went well and what to improve"
               ></textarea>
-
             </label>
 
 
@@ -544,11 +551,13 @@
               Save Trade
 
             </button>
+            <button id="exportJournal" class="primary-button" type="button">Export journal CSV</button>
 
 
           </div>
 
 
+          <p class="card-description">Journal entries are saved only in this browser on this device. They are not synced to an account or cloud.</p>
           <div
             id="journalEntries"
             class="journal-entries"
