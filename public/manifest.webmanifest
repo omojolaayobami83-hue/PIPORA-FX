@@ -2,7 +2,7 @@
   "id": "/",
   "name": "PIPORA GOLD",
   "short_name": "PIPORA GOLD",
-  "description": "Focused XAUUSD market analysis and trading journal.",
+  "description": "Technical market analysis, multi-timeframe context and risk-awareness tools for XAUUSD and GBPJPY.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -10,6 +10,12 @@
   "theme_color": "#080b10",
   "orientation": "any",
   "icons": [
-    {"src": "/pipora-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
-  ]
+    {
+      "src": "/pipora-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "version": "1.1.0"
 }
