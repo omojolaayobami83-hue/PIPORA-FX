@@ -810,7 +810,7 @@ async function fetchTimeframeAnalysis(interval) {
 }
 async function runMtfScan(){
   const button=getElement("runMtfScan");if(button){button.disabled=true;button.textContent="Scanning…";}
-  setText("mtfVerdict","SCANNING");setText("mtfExplanation","Comparing four Gold timeframes…");
+  setText("mtfVerdict","SCANNING");setText("mtfExplanation","Comparing four "+(selectedMarket==="XAUUSD"?"Gold":"GBPJPY")+" timeframes…");
   const frames=[["4h","mtf4h"],["1h","mtf1h"],["15min","mtf15m"],["5min","mtf5m"]], results={};
   try{
     for(const [tf,id] of frames){const a=await fetchTimeframeAnalysis(tf);results[tf]=a;setText(id,a.bias);setText(id+"Note",a.structure+" · EMA "+a.emaBias);}
