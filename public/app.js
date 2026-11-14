@@ -140,6 +140,7 @@ document.querySelectorAll("[data-market]").forEach(button => {
     });
 
     setText("chartMarket", market);
+    setText("runMtfScan", "Run " + (market === "XAUUSD" ? "Gold" : "GBPJPY") + " scan");
 
     resetAnalysis();
     showPage("market");
