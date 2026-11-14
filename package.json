@@ -1,7 +1,7 @@
 {
   "name": "pipora-gold",
   "version": "1.0.0",
-  "description": "PIPORA GOLD - Gold Market Intelligence",
+  "description": "PIPORA GOLD - multi-market technical analysis and risk-awareness tools",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,5 +10,8 @@
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^4.21.2"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
