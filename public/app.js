@@ -11,39 +11,17 @@
 // ==========================================
 
 const MARKETS = {
-  EURUSD: {
-    symbol: "FX:EURUSD",
-    digits: 5
-  },
-
-  GBPUSD: {
-    symbol: "FX:GBPUSD",
-    digits: 5
-  },
-
-  GBPJPY: {
-    symbol: "FX:GBPJPY",
-    digits: 3
-  },
-
   XAUUSD: {
     symbol: "OANDA:XAUUSD",
-    digits: 2
+    digits: 2,
+    label: "Gold vs US Dollar",
+    pipLabel: "price dollars"
   },
-
-  USDJPY: {
-    symbol: "FX:USDJPY",
-    digits: 3
-  },
-
-  AUDUSD: {
-    symbol: "FX:AUDUSD",
-    digits: 5
-  },
-
-  USDCAD: {
-    symbol: "FX:USDCAD",
-    digits: 5
+  GBPJPY: {
+    symbol: "FX:GBPJPY",
+    digits: 3,
+    label: "British Pound vs Japanese Yen",
+    pipLabel: "price units"
   }
 };
 
@@ -411,6 +389,21 @@ function calculateEMA(values, period) {
 }
 
 
+function calculateATR(data, period = 14) {
+  if (data.length <= period) return null;
+  const ranges = [];
+  for (let i = 1; i < data.length; i++) {
+    const current = data[i], previous = data[i - 1];
+    ranges.push(Math.max(
+      current.high - current.low,
+      Math.abs(current.high - previous.close),
+      Math.abs(current.low - previous.close)
+    ));
+  }
+  const recent = ranges.slice(-period);
+  return recent.reduce((sum, value) => sum + value, 0) / recent.length;
+}
+
 function calculateRSI(values, period = 14) {
   if (values.length <= period) {
     return null;
@@ -596,38 +589,17 @@ function analyzeStructure(data) {
 // ==========================================
 
 function analyzeLiquidity(data, swings) {
-  const recent = data.slice(-20);
-
-  const recentHigh = Math.max(
-    ...recent.map(candle => candle.high)
-  );
-
-  const recentLow = Math.min(
-    ...recent.map(candle => candle.low)
-  );
-
+  if (data.length < 22) return "Insufficient candles";
   const last = data[data.length - 1];
-
-  const previous = data[data.length - 2];
-
-  if (
-    previous.high > recentHigh &&
-    last.close < recentHigh
-  ) {
-    return "Possible high sweep";
-  }
-
-  if (
-    previous.low < recentLow &&
-    last.close > recentLow
-  ) {
-    return "Possible low sweep";
-  }
-
-  if (swings.highs.length && swings.lows.length) {
-    return "Levels under observation";
-  }
-
+  const priorRange = data.slice(-21, -1);
+  const priorHigh = Math.max(...priorRange.map(c => c.high));
+  const priorLow = Math.min(...priorRange.map(c => c.low));
+  const sweptHigh = last.high > priorHigh && last.close < priorHigh;
+  const sweptLow = last.low < priorLow && last.close > priorLow;
+  if (sweptHigh && sweptLow) return "Both-side sweep · unclear";
+  if (sweptHigh) return "Possible buy-side liquidity sweep";
+  if (sweptLow) return "Possible sell-side liquidity sweep";
+  if (swings.highs.length && swings.lows.length) return "Swing liquidity levels mapped";
   return "Not identified";
 }
 
@@ -653,10 +625,11 @@ function analyzeMarket() {
   const ema21 = ema21Values[ema21Values.length - 1];
 
   const rsi = calculateRSI(closes, 14);
+  const atr = calculateATR(candles, 14);
 
   const structure = analyzeStructure(candles);
 
-  const recent = candles.slice(-20);
+  const recent = candles.slice(-21, -1);
 
   const support = Math.min(
     ...recent.map(candle => candle.low)
@@ -750,7 +723,8 @@ function analyzeMarket() {
     trendConfirmed,
     support,
     resistance,
-    priceTrend
+    priceTrend,
+    atr
   });
 }
 
@@ -769,7 +743,8 @@ function evaluateSetup(data) {
     bos,
     trendConfirmed,
     support,
-    resistance
+    resistance,
+    atr
   } = data;
 
   let decision = "WAIT";
@@ -778,36 +753,47 @@ function evaluateSetup(data) {
     "No sufficiently confirmed setup. Wait for clearer price action.";
 
   // These are educational filters, not guaranteed signals.
+  const isGold = selectedMarket === "XAUUSD";
+  const bullishRsiFloor = isGold ? 52 : 51;
+  const rsiCeiling = isGold ? 68 : 67;
+  const bearishRsiCeiling = isGold ? 48 : 49;
+  const rsiFloor = isGold ? 32 : 33;
+  const candleRange = last.high - last.low;
+  const volatilityUsable = Number.isFinite(atr) && atr > 0 &&
+    candleRange <= atr * (isGold ? 2.8 : 2.5);
+
   const bullishSetup =
     trend === "BULLISH" &&
     trendConfirmed &&
     bos === "BULLISH" &&
     rsi !== null &&
-    rsi >= 50 &&
-    rsi < 70 &&
+    rsi >= bullishRsiFloor &&
+    rsi < rsiCeiling &&
     last.close > ema9 &&
-    ema9 > ema21;
+    ema9 > ema21 &&
+    volatilityUsable;
 
   const bearishSetup =
     trend === "BEARISH" &&
     trendConfirmed &&
     bos === "BEARISH" &&
     rsi !== null &&
-    rsi <= 50 &&
-    rsi > 30 &&
+    rsi <= bearishRsiCeiling &&
+    rsi > rsiFloor &&
     last.close < ema9 &&
-    ema9 < ema21;
+    ema9 < ema21 &&
+    volatilityUsable;
 
   if (bullishSetup) {
     decision = "BUY CANDIDATE";
 
     explanation =
-      "Bullish structure, EMA alignment, RSI and a bullish break are aligned. Check the retest, spread, news and risk before considering any trade.";
+      "Bullish structure, EMA alignment, RSI and a bullish break are aligned. Check a retest, volatility, spread, relevant news and risk. This is a candidate, not an instruction.";
   } else if (bearishSetup) {
     decision = "SELL CANDIDATE";
 
     explanation =
-      "Bearish structure, EMA alignment, RSI and a bearish break are aligned. Check the retest, spread, news and risk before considering any trade.";
+      "Bearish structure, EMA alignment, RSI and a bearish break are aligned. Check a retest, volatility, spread, relevant news and risk. This is a candidate, not an instruction.";
   }
 
   const badge = getElement("signal");
@@ -1030,7 +1016,7 @@ if (saveJournalButton) {
 
 /* PIPORA GOLD: top-down multi-timeframe analysis */
 async function fetchTimeframeAnalysis(interval) {
-  const q=new URLSearchParams({market:"XAUUSD",interval});
+  const q=new URLSearchParams({market:selectedMarket,interval});
   const response=await fetch("/api/price?"+q.toString());
   const payload=await response.json();
   if(!response.ok||!Array.isArray(payload.values)) throw new Error(payload.error||"Data unavailable");
@@ -1041,7 +1027,7 @@ async function fetchTimeframeAnalysis(interval) {
   const emaBias=fast>slow?"BULLISH":fast<slow?"BEARISH":"NEUTRAL";
   return {bias:structure.trend===emaBias?emaBias:"MIXED",structure:structure.structure,emaBias};
 }
-async function runGoldMtfScan(){
+async function runMtfScan(){
   const button=getElement("runMtfScan");if(button){button.disabled=true;button.textContent="Scanning…";}
   setText("mtfVerdict","SCANNING");setText("mtfExplanation","Comparing four Gold timeframes…");
   const frames=[["4h","mtf4h"],["1h","mtf1h"],["15min","mtf15m"],["5min","mtf5m"]], results={};
@@ -1056,7 +1042,7 @@ async function runGoldMtfScan(){
     setText("mtfVerdict",verdict);setText("mtfExplanation",explanation);
     setText("mtfUpdated","Last scan: "+new Date().toLocaleString("en-NG",{timeZone:"Africa/Lagos"}));
   }catch(error){setText("mtfVerdict","SCAN INCOMPLETE");setText("mtfExplanation",error.message+" No directional conclusion is available.");frames.forEach(([,id])=>{setText(id,"--");setText(id+"Note","Data unavailable");});}
-  finally{if(button){button.disabled=false;button.textContent="Run Gold scan";}}
+  finally{if(button){button.disabled=false;button.textContent="Run "+(selectedMarket==="XAUUSD"?"Gold":"GBPJPY")+" scan";}}
 }
 function updateGoldSessionClock(){
   const parts=new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Lagos",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date());
@@ -1066,7 +1052,7 @@ function updateGoldSessionClock(){
   setText("newYorkSession",active(780,1260)?"OPEN · approx 13:00–21:00":"CLOSED · approx 13:00–21:00");
   setText("overlapSession",active(780,1020)?"OPEN · approx 13:00–17:00":"CLOSED · approx 13:00–17:00");
 }
-const mtfButton=getElement("runMtfScan");if(mtfButton)mtfButton.addEventListener("click",runGoldMtfScan);
+const mtfButton=getElement("runMtfScan");if(mtfButton)mtfButton.addEventListener("click",runMtfScan);
 updateGoldSessionClock();setInterval(updateGoldSessionClock,60000);
 
 async function loadDashboardPrices(){
@@ -1091,7 +1077,6 @@ function startApp() {
   renderJournal();
 
   loadDashboardPrices();
-  runGoldMtfScan();
 }
 
 document.addEventListener("DOMContentLoaded", startApp);
@@ -1102,18 +1087,19 @@ function calculateGoldRisk(){
   const riskPct=Number(getElement("riskPercent")?.value);
   const stopDistance=Number(getElement("riskDistance")?.value);
   const contractSize=Number(getElement("riskContract")?.value);
+  const conversion=Number(getElement("riskConversion")?.value);
   const amountNode=getElement("riskAmount"), lotsNode=getElement("riskLots"), noteNode=getElement("riskNote");
-  if(![balance,riskPct,stopDistance,contractSize].every(Number.isFinite)||balance<=0||riskPct<=0||riskPct>100||stopDistance<=0||contractSize<=0){
+  if(![balance,riskPct,stopDistance,contractSize,conversion].every(Number.isFinite)||balance<=0||riskPct<=0||riskPct>100||stopDistance<=0||contractSize<=0||conversion<=0){
     if(amountNode)amountNode.textContent="Risk amount: enter valid positive values";
     if(lotsNode)lotsNode.textContent="Estimated lot size: --";
     if(noteNode)noteNode.textContent="All four inputs are required. Check your broker's contract size.";
     return;
   }
   const riskAmount=balance*riskPct/100;
-  const estimatedLots=riskAmount/(stopDistance*contractSize);
+  const estimatedLots=riskAmount/(stopDistance*contractSize*conversion);
   if(amountNode)amountNode.textContent="Risk amount: "+riskAmount.toFixed(2)+" (account currency)";
   if(lotsNode)lotsNode.textContent="Estimated lot size: "+estimatedLots.toFixed(4);
-  if(noteNode)noteNode.textContent="Formula: balance × risk % ÷ (stop distance × contract size). Confirm lot step, minimum lot, tick value and margin with your broker. This is an estimate, not a trade instruction.";
+  if(noteNode)noteNode.textContent="Formula includes your quote-currency-to-account-currency conversion factor. Confirm contract size, tick value, lot step, minimum lot, spread, commission and margin with your broker. If your account currency is the quote currency, use 1. This estimate is not a trade instruction.";
 }
 const riskButton=getElement("calculateRisk");
 if(riskButton)riskButton.addEventListener("click",calculateGoldRisk);
@@ -1134,7 +1120,7 @@ function checkGoldNewsEvent(){
   const minutes=(eventTime.getTime()-Date.now())/60000;
   const windowMinutes=impact==="high"?30:impact==="medium"?15:5;
   if(impact==="high"&&Math.abs(minutes)<=30){
-    output.textContent=name+": HIGH-IMPACT EVENT WINDOW. Avoid opening a new Gold trade; volatility and spread can rise. Event time is based on your device clock.";
+    output.textContent=name+": HIGH-IMPACT EVENT WINDOW. Avoid opening a new "+selectedMarket+" trade; volatility and spread can rise. Event time is based on your device clock.";
     output.className="news-result danger";
   }else if(impact==="medium"&&Math.abs(minutes)<=15){
     output.textContent=name+": medium-impact event is near. Consider waiting for volatility to settle.";
