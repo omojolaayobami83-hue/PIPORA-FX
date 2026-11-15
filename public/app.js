@@ -940,3 +940,50 @@ if(installAppButton){
   });
 }
 window.addEventListener("appinstalled",()=>{if(installAppButton)installAppButton.hidden=true;});
+
+
+/* PIPORA historical backtest: closed-bar signals, no overlapping positions. */
+function piporaBacktestSignal(data, i) {
+  const s=data.slice(0,i+1), closes=s.map(c=>c.close), fast=calculateEMA(closes,9).at(-1), slow=calculateEMA(closes,21).at(-1), rsi=calculateRSI(closes,14), atr=calculateATR(s,14), structure=analyzeStructure(s), price=closes.at(-1);
+  if(![fast,slow,rsi,atr].every(Number.isFinite)||atr<=0)return null;
+  if(structure.trend==="BULLISH"&&fast>slow&&price>fast&&rsi>=52&&rsi<=68&&structure.bos==="BULLISH")return{side:"BUY",entry:price,stop:price-1.5*atr,target:price+3*atr};
+  if(structure.trend==="BEARISH"&&fast<slow&&price<fast&&rsi>=32&&rsi<=48&&structure.bos==="BEARISH")return{side:"SELL",entry:price,stop:price+1.5*atr,target:price-3*atr};
+  return null;
+}
+function piporaRunBacktest(data){
+  const trades=[];let i=34;
+  while(i<data.length-1){
+    const setup=piporaBacktestSignal(data,i);if(!setup){i++;continue;}
+    const last=Math.min(i+20,data.length-1);let r=null,exitAt=last,outcome="TIME EXIT";
+    for(let k=i+1;k<=last;k++){
+      const x=data[k],stop=setup.side==="BUY"?x.low<=setup.stop:x.high>=setup.stop,target=setup.side==="BUY"?x.high>=setup.target:x.low<=setup.target;
+      if(stop){r=-1;exitAt=k;outcome="LOSS";break;}
+      if(target){r=2;exitAt=k;outcome="WIN";break;}
+    }
+    if(r===null){const move=setup.side==="BUY"?data[last].close-setup.entry:setup.entry-data[last].close;r=Math.max(-1,Math.min(2,move/Math.abs(setup.entry-setup.stop)));}
+    trades.push({r,outcome});i=exitAt+1;
+  }
+  let eq=0,peak=0,dd=0;for(const t of trades){eq+=t.r;peak=Math.max(peak,eq);dd=Math.max(dd,peak-eq);}
+  const wins=trades.filter(t=>t.r>0).length,losses=trades.filter(t=>t.r<0).length,net=trades.reduce((a,t)=>a+t.r,0);
+  return{count:trades.length,wins,losses,winRate:trades.length?100*wins/trades.length:0,net,dd,avg:trades.length?net/trades.length:0,time:trades.filter(t=>t.outcome==="TIME EXIT").length};
+}
+function installPiporaBacktest(){
+  const scanner=getElement("scanner");if(!scanner||getElement("piporaBacktest"))return;
+  const box=document.createElement("section");box.id="piporaBacktest";box.className="scanner-card backtest-card";
+  box.innerHTML='<div class="section-heading"><h2>Historical Strategy Backtest</h2><span>Recent closed-candle test</span></div><p>Tests the selected market and timeframe using EMA 9/21, RSI, structure and BOS. Risk model: 1.5 ATR stop, 2R target, maximum 20 candles per trade. If stop and target are both touched in one candle, stop is counted first.</p><button id="runBacktest" class="primary-button" type="button">Run historical backtest</button><div id="backtestStatus" class="news-result" aria-live="polite">Choose a market and timeframe, then run the test.</div><div class="backtest-stats"><div><small>TRADES</small><strong id="btTrades">--</strong></div><div><small>WIN RATE</small><strong id="btWinRate">--</strong></div><div><small>NET RESULT</small><strong id="btNetR">--</strong></div><div><small>MAX DRAWDOWN</small><strong id="btDrawdown">--</strong></div></div><div class="analysis-details"><div><span>Wins / losses</span><strong id="btWinsLosses">--</strong></div><div><span>Average R / trade</span><strong id="btAverageR">--</strong></div><div><span>Sample</span><strong id="btSample">--</strong></div></div><p class="card-description">Uses up to 100 recent provider candles. Spread, commission, slippage and broker execution are excluded. A small sample cannot establish a reliable edge; this is research, not a trading instruction.</p>';
+  scanner.appendChild(box);
+  getElement("runBacktest").addEventListener("click",async()=>{
+    const b=getElement("runBacktest"),out=getElement("backtestStatus");b.disabled=true;b.textContent="Testing…";out.className="news-result";out.textContent="Loading historical candles…";
+    try{
+      const q=new URLSearchParams({market:selectedMarket,interval:selectedTimeframe}),res=await fetch("/api/price?"+q),payload=await res.json();
+      if(!res.ok||!Array.isArray(payload.values))throw new Error(payload.error||"Historical candles unavailable.");
+      const data=payload.values.slice().reverse().map(x=>({open:+x.open,high:+x.high,low:+x.low,close:+x.close})).filter(x=>[x.open,x.high,x.low,x.close].every(Number.isFinite));
+      if(data.length<50)throw new Error("Need at least 50 valid candles; received "+data.length+".");
+      const r=piporaRunBacktest(data);
+      setText("btTrades",r.count);setText("btWinRate",r.winRate.toFixed(1)+"%");setText("btNetR",(r.net>=0?"+":"")+r.net.toFixed(2)+"R");setText("btDrawdown",r.dd.toFixed(2)+"R");setText("btWinsLosses",r.wins+" / "+r.losses);setText("btAverageR",(r.avg>=0?"+":"")+r.avg.toFixed(2)+"R");setText("btSample",data.length+" candles · "+selectedMarket+" · "+selectedTimeframe);
+      out.textContent=r.count?r.count+" non-overlapping setups tested: "+r.wins+" profitable, "+r.losses+" losing, "+r.time+" time exits. Historical results do not predict future performance.":"No setups met all rules in this sample. Do not loosen rules just to force signals.";
+    }catch(e){out.className="news-result danger";out.textContent=e.message+" No conclusion available.";}
+    finally{b.disabled=false;b.textContent="Run historical backtest";}
+  });
+}
+document.addEventListener("DOMContentLoaded",installPiporaBacktest);
