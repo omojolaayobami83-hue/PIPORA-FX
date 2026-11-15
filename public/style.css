@@ -970,3 +970,7 @@ button:disabled {
 .back-dashboard-button:hover{border-color:var(--green);color:var(--green)}
 .market-page-heading{margin-bottom:18px}
 @media(max-width:700px){.market-dashboard-grid{grid-template-columns:1fr;gap:12px}.market-tile{padding:17px}.market-tile-price{font-size:23px}}
+
+
+/* Historical backtest panel */
+.backtest-card{margin-top:18px}.backtest-card .section-heading{margin-bottom:10px}.backtest-card>p{color:var(--muted);line-height:1.65;margin:12px 0}.backtest-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}.backtest-stats>div{padding:15px;background:#0b1017;border:1px solid var(--border);border-radius:9px;min-width:0}.backtest-stats small,.backtest-stats strong{display:block}.backtest-stats small{color:var(--muted);font-size:10px}.backtest-stats strong{font-size:19px;margin-top:8px;color:var(--green);overflow-wrap:anywhere}@media(max-width:700px){.backtest-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
