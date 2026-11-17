@@ -1,5 +1,5 @@
 /* ==========================================
-   PIPORA FX
+   PIPORA GOLD
    SMART MARKET INTELLIGENCE
    Market Analysis Engine
 ========================================== */
