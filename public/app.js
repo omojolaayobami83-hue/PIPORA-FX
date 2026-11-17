@@ -331,7 +331,7 @@ async function loadMarketData() {
       throw new Error("Not enough valid completed candles. No signal will be produced until sufficient closed data is available.");
     }
 
-    setStatus("Live Data Connected");
+    setStatus("Market Data Connected");
 
     setText("priceDescription", "Last completed Twelve Data candle · " + (candles[candles.length - 1]?.datetime || "timestamp unavailable"));
 
