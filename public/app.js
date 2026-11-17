@@ -269,6 +269,26 @@ function renderChart() {
 // MARKET DATA
 // ==========================================
 
+// Twelve Data returns newest candles first. The newest bar may still be forming.
+// Drop it conservatively so analysis, scanner and backtest use completed candles only.
+function normalizeClosedCandles(values) {
+  if (!Array.isArray(values)) return [];
+  const ordered = values.slice().reverse();
+  const clean = [];
+  const seen = new Set();
+  for (const row of ordered) {
+    const candle = {datetime:row.datetime||"",open:Number(row.open),high:Number(row.high),low:Number(row.low),close:Number(row.close)};
+    if (![candle.open,candle.high,candle.low,candle.close].every(Number.isFinite)) continue;
+    if (candle.high < Math.max(candle.open,candle.close) || candle.low > Math.min(candle.open,candle.close) || candle.high < candle.low) continue;
+    if (candle.datetime && seen.has(candle.datetime)) continue;
+    if (candle.datetime) seen.add(candle.datetime);
+    clean.push(candle);
+  }
+  // Never calculate a signal from a candle that may not have closed yet.
+  if (clean.length) clean.pop();
+  return clean;
+}
+
 async function loadMarketData() {
   const requestId = ++marketRequestNumber;
 
@@ -306,33 +326,14 @@ async function loadMarketData() {
       );
     }
 
-    if (!Array.isArray(data.values) || data.values.length < 30) {
-      throw new Error(
-        "Not enough candles to calculate reliable indicators."
-      );
-    }
-
-    // Provider returns newest candle first.
-    // Analysis requires oldest candle first.
-    candles = data.values
-      .slice()
-      .reverse()
-      .filter(candle =>
-        [
-          candle.open,
-          candle.high,
-          candle.low,
-          candle.close
-        ].every(Number.isFinite)
-      );
-
+    candles = normalizeClosedCandles(data.values);
     if (candles.length < 30) {
-      throw new Error("Insufficient valid candle data.");
+      throw new Error("Not enough valid completed candles. No signal will be produced until sufficient closed data is available.");
     }
 
     setStatus("Live Data Connected");
 
-    setText("priceDescription", "Twelve Data candle close · " + (candles[candles.length - 1]?.datetime || "timestamp unavailable"));
+    setText("priceDescription", "Last completed Twelve Data candle · " + (candles[candles.length - 1]?.datetime || "timestamp unavailable"));
 
     analyzeMarket();
 
@@ -795,25 +796,30 @@ if (exportJournalButton) {
 // ==========================================
 
 
-/* PIPORA FX: top-down multi-timeframe analysis */
-async function fetchTimeframeAnalysis(interval) {
-  const q=new URLSearchParams({market:selectedMarket,interval});
+/* PIPORA GOLD: top-down multi-timeframe analysis on completed candles */
+async function fetchTimeframeAnalysis(interval, market) {
+  const q=new URLSearchParams({market,interval});
   const response=await fetch("/api/price?"+q.toString());
   const payload=await response.json();
   if(!response.ok||!Array.isArray(payload.values)) throw new Error(payload.error||"Data unavailable");
-  const data=payload.values.slice().reverse().map(c=>({open:+c.open,high:+c.high,low:+c.low,close:+c.close})).filter(c=>[c.open,c.high,c.low,c.close].every(Number.isFinite));
-  if(data.length<30) throw new Error("Not enough "+interval+" candles");
+  const data=normalizeClosedCandles(payload.values);
+  if(data.length<30) throw new Error("Not enough completed "+interval+" candles");
   const structure=analyzeStructure(data), closes=data.map(c=>c.close);
   const fast=calculateEMA(closes,9).at(-1), slow=calculateEMA(closes,21).at(-1);
   const emaBias=fast>slow?"BULLISH":fast<slow?"BEARISH":"NEUTRAL";
   return {bias:structure.trend===emaBias?emaBias:"MIXED",structure:structure.structure,emaBias};
 }
 async function runMtfScan(){
-  const button=getElement("runMtfScan");if(button){button.disabled=true;button.textContent="Scanning…";}
-  setText("mtfVerdict","SCANNING");setText("mtfExplanation","Comparing four "+(selectedMarket==="XAUUSD"?"Gold":"GBPJPY")+" timeframes…");
+  const button=getElement("runMtfScan"),scanMarket=selectedMarket;
+  if(button){button.disabled=true;button.textContent="Scanning…";}
+  setText("mtfVerdict","SCANNING");setText("mtfExplanation","Comparing four "+(scanMarket==="XAUUSD"?"Gold":"GBPJPY")+" timeframes using completed candles…");
   const frames=[["4h","mtf4h"],["1h","mtf1h"],["15min","mtf15m"],["5min","mtf5m"]], results={};
   try{
-    for(const [tf,id] of frames){const a=await fetchTimeframeAnalysis(tf);results[tf]=a;setText(id,a.bias);setText(id+"Note",a.structure+" · EMA "+a.emaBias);}
+    for(const [tf,id] of frames){
+      const a=await fetchTimeframeAnalysis(tf,scanMarket);
+      if(scanMarket!==selectedMarket) throw new Error("Market changed during scan. Run the scan again for the selected instrument.");
+      results[tf]=a;setText(id,a.bias);setText(id+"Note",a.structure+" · EMA "+a.emaBias);
+    }
     const higher=[results["4h"].bias,results["1h"].bias], lower=[results["15min"].bias,results["5min"].bias];
     let verdict="WAIT", explanation="Timeframes are mixed. Wait for agreement; do not force a trade.";
     if(higher.every(x=>x==="BULLISH")&&lower.every(x=>x==="BULLISH")){verdict="BULLISH ALIGNMENT";explanation="All four timeframes currently align bullish. This is context, not an entry signal; wait for a pullback and a separate trigger.";}
@@ -844,8 +850,9 @@ async function loadDashboardPrices(){
       const q=new URLSearchParams({market,interval:"15min"});
       const response=await fetch("/api/price?"+q.toString());
       const data=await response.json();
-      if(!response.ok||!Array.isArray(data.values)||!data.values.length) throw new Error(data.error||"Price unavailable");
-      const price=Number(data.values[0].close);
+      if(!response.ok||!Array.isArray(data.values)||data.values.length<2) throw new Error(data.error||"Price unavailable");
+      // Provider is newest-first: index 1 is the most recent completed 15-minute candle.
+      const price=Number(data.values[1].close);
       const digits=MARKETS[market].digits;
       node.textContent=Number.isFinite(price)?price.toLocaleString("en-US",{minimumFractionDigits:digits,maximumFractionDigits:digits}):"Price unavailable";
     } catch(error) { node.textContent="Price unavailable"; }
@@ -862,7 +869,7 @@ function startApp() {
 
 document.addEventListener("DOMContentLoaded", startApp);
 
-// PIPORA FX risk calculator: broker contract size is user supplied.
+// PIPORA GOLD risk calculator: broker contract size is user supplied.
 function calculateGoldRisk(){
   const balance=Number(getElement("riskBalance")?.value);
   const riskPct=Number(getElement("riskPercent")?.value);
@@ -931,7 +938,7 @@ window.addEventListener("beforeinstallprompt",event=>{
 if(installAppButton){
   installAppButton.addEventListener("click",async()=>{
     if(!piporaInstallPrompt){
-      alert("To install PIPORA FX, open your browser menu and choose 'Install app' or 'Add to Home screen'.");
+      alert("To install PIPORA GOLD, open your browser menu and choose 'Install app' or 'Add to Home screen'.");
       return;
     }
     piporaInstallPrompt.prompt();
@@ -977,8 +984,8 @@ function installPiporaBacktest(){
     try{
       const q=new URLSearchParams({market:selectedMarket,interval:selectedTimeframe}),res=await fetch("/api/price?"+q),payload=await res.json();
       if(!res.ok||!Array.isArray(payload.values))throw new Error(payload.error||"Historical candles unavailable.");
-      const data=payload.values.slice().reverse().map(x=>({open:+x.open,high:+x.high,low:+x.low,close:+x.close})).filter(x=>[x.open,x.high,x.low,x.close].every(Number.isFinite));
-      if(data.length<50)throw new Error("Need at least 50 valid candles; received "+data.length+".");
+      const data=normalizeClosedCandles(payload.values);
+      if(data.length<50)throw new Error("Need at least 50 valid completed candles; received "+data.length+".");
       const r=piporaRunBacktest(data);
       setText("btTrades",r.count);setText("btWinRate",r.winRate.toFixed(1)+"%");setText("btNetR",(r.net>=0?"+":"")+r.net.toFixed(2)+"R");setText("btDrawdown",r.dd.toFixed(2)+"R");setText("btWinsLosses",r.wins+" / "+r.losses);setText("btAverageR",(r.avg>=0?"+":"")+r.avg.toFixed(2)+"R");setText("btSample",data.length+" candles · "+selectedMarket+" · "+selectedTimeframe);
       out.textContent=r.count?r.count+" non-overlapping setups tested: "+r.wins+" profitable, "+r.losses+" losing, "+r.time+" time exits. Historical results do not predict future performance.":"No setups met all rules in this sample. Do not loosen rules just to force signals.";
