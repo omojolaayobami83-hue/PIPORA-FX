@@ -8,7 +8,7 @@ PIPORA GOLD is an educational market-analysis web app focused on **XAUUSD (Gold)
 
 - Two-market dashboard: select Gold or GBPJPY before opening its chart.
 - TradingView chart view with 5-minute, 15-minute, 1-hour and 4-hour intervals.
-- Twelve Data candle feed through the server (API key stays on the server).
+- Twelve Data candle feed through the server (API key stays on the server); analysis, scanner and backtest exclude the newest potentially unfinished candle.
 - EMA 9/21, RSI 14, ATR 14, swing-structure estimates, BOS/possible CHOCH, recent support/resistance, liquidity-sweep checks, three-candle FVG estimates and potential order-block zones.
 - Four-timeframe context scanner for the selected market.
 - Broker-input risk estimate with quote-to-account currency conversion.
