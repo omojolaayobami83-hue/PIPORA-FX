@@ -958,20 +958,39 @@ function piporaBacktestSignal(data, i) {
   return null;
 }
 function piporaRunBacktest(data){
+  // A signal is known only after candle i closes. Simulate entry at the NEXT
+  // candle open, not at the signal candle close, to avoid an impossible fill.
   const trades=[];let i=34;
   while(i<data.length-1){
-    const setup=piporaBacktestSignal(data,i);if(!setup){i++;continue;}
-    const last=Math.min(i+20,data.length-1);let r=null,exitAt=last,outcome="TIME EXIT";
-    for(let k=i+1;k<=last;k++){
-      const x=data[k],stop=setup.side==="BUY"?x.low<=setup.stop:x.high>=setup.stop,target=setup.side==="BUY"?x.high>=setup.target:x.low<=setup.target;
-      if(stop){r=-1;exitAt=k;outcome="LOSS";break;}
-      if(target){r=2;exitAt=k;outcome="WIN";break;}
+    const setup=piporaBacktestSignal(data,i);
+    if(!setup){i++;continue;}
+    const entryIndex=i+1;
+    const entry=data[entryIndex].open;
+    const risk=Math.abs(setup.entry-setup.stop);
+    if(!Number.isFinite(entry)||!Number.isFinite(risk)||risk<=0){i++;continue;}
+    const stop=setup.side==="BUY"?entry-risk:entry+risk;
+    const target=setup.side==="BUY"?entry+2*risk:entry-2*risk;
+    const last=Math.min(entryIndex+19,data.length-1);
+    let r=null,exitAt=last,outcome="TIME EXIT";
+    for(let k=entryIndex;k<=last;k++){
+      const x=data[k];
+      const stopHit=setup.side==="BUY"?x.low<=stop:x.high>=stop;
+      const targetHit=setup.side==="BUY"?x.high>=target:x.low<=target;
+      // Conservative assumption if both levels are touched within one bar.
+      if(stopHit){r=-1;exitAt=k;outcome="LOSS";break;}
+      if(targetHit){r=2;exitAt=k;outcome="WIN";break;}
     }
-    if(r===null){const move=setup.side==="BUY"?data[last].close-setup.entry:setup.entry-data[last].close;r=Math.max(-1,Math.min(2,move/Math.abs(setup.entry-setup.stop)));}
+    if(r===null){
+      const move=setup.side==="BUY"?data[last].close-entry:entry-data[last].close;
+      r=Math.max(-1,Math.min(2,move/risk));
+    }
     trades.push({r,outcome});i=exitAt+1;
   }
-  let eq=0,peak=0,dd=0;for(const t of trades){eq+=t.r;peak=Math.max(peak,eq);dd=Math.max(dd,peak-eq);}
-  const wins=trades.filter(t=>t.r>0).length,losses=trades.filter(t=>t.r<0).length,net=trades.reduce((a,t)=>a+t.r,0);
+  let eq=0,peak=0,dd=0;
+  for(const t of trades){eq+=t.r;peak=Math.max(peak,eq);dd=Math.max(dd,peak-eq);}
+  const wins=trades.filter(t=>t.r>0).length;
+  const losses=trades.filter(t=>t.r<0).length;
+  const net=trades.reduce((a,t)=>a+t.r,0);
   return{count:trades.length,wins,losses,winRate:trades.length?100*wins/trades.length:0,net,dd,avg:trades.length?net/trades.length:0,time:trades.filter(t=>t.outcome==="TIME EXIT").length};
 }
 function installPiporaBacktest(){
