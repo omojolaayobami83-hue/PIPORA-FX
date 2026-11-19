@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080b10">
+<title>Sign in · PIPORA GOLD</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#080b10;color:#f2f5f9;font:15px Arial,sans-serif;padding:20px}.card{width:min(100%,420px);background:#10151d;border:1px solid #26303d;border-radius:18px;padding:30px;box-shadow:0 20px 70px #0008}.logo{width:48px;height:48px;border-radius:13px;background:#00e6a0;color:#06110d;display:grid;place-items:center;font-size:26px;font-weight:900;margin-bottom:22px}h1{font-size:23px;margin:0 0 8px}p{color:#8995a5;line-height:1.6;margin:0 0 24px}label{display:block;color:#cbd3dd;font-size:13px;margin-bottom:9px}input{width:100%;padding:14px;border-radius:9px;border:1px solid #354252;background:#080b10;color:white;font-size:16px;margin-bottom:16px}button{width:100%;padding:14px;border:0;border-radius:9px;background:#00e6a0;color:#06110d;font-weight:800;font-size:15px}#message{margin-top:16px;color:#f5c451;font-size:13px;min-height:18px}.small{font-size:11px;margin:20px 0 0}
+</style>
+</head>
+<body>
+<main class="card">
+<div class="logo">P</div>
+<h1>PIPORA GOLD</h1>
+<p>Private market intelligence hub. Sign in with the owner access password to continue.</p>
+<form id="loginForm">
+<label for="password">Owner access password</label>
+<input id="password" name="password" type="password" autocomplete="current-password" required minlength="12" placeholder="Enter your private password">
+<button id="submit" type="submit">Unlock PIPORA GOLD</button>
+</form>
+<div id="message" role="status" aria-live="polite"></div>
+<p class="small">Your access is protected by a secure, time-limited sign-in session.</p>
+</main>
+<script>
+const form=document.getElementById("loginForm"),message=document.getElementById("message"),button=document.getElementById("submit");
+fetch("/api/auth/status",{cache:"no-store"}).then(r=>r.json()).then(s=>{if(s.authenticated)location.replace("/");if(s.setupRequired)message.textContent="Owner setup is not finished. Configure the two PIPORA access variables in Render first.";}).catch(()=>{message.textContent="Could not check sign-in status. Refresh and try again.";});
+form.addEventListener("submit",async event=>{
+ event.preventDefault();button.disabled=true;button.textContent="Checking…";message.textContent="";
+ try{
+  const response=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:document.getElementById("password").value})});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error||"Sign-in failed.");
+  location.replace("/");
+ }catch(error){message.textContent=error.message;}
+ finally{button.disabled=false;button.textContent="Unlock PIPORA GOLD";}
+});
+</script>
+</body>
+</html>
