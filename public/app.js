@@ -1000,8 +1000,33 @@ function piporaRunBacktest(data){
 function installPiporaBacktest(){
   const scanner=getElement("scanner");if(!scanner||getElement("piporaBacktest"))return;
   const box=document.createElement("section");box.id="piporaBacktest";box.className="scanner-card backtest-card";
-  box.innerHTML='<div class="section-heading"><h2>Historical Strategy Backtest</h2><span>Recent closed-candle test</span></div><p>Tests the selected market and timeframe using EMA 9/21, RSI, structure and BOS. Risk model: 1.5 ATR stop, 2R target, maximum 20 candles per trade. If stop and target are both touched in one candle, stop is counted first.</p><button id="runBacktest" class="primary-button" type="button">Run historical backtest</button><div id="backtestStatus" class="news-result" aria-live="polite">Choose a market and timeframe, then run the test.</div><div class="backtest-stats"><div><small>TRADES</small><strong id="btTrades">--</strong></div><div><small>WIN RATE</small><strong id="btWinRate">--</strong></div><div><small>NET RESULT</small><strong id="btNetR">--</strong></div><div><small>MAX DRAWDOWN</small><strong id="btDrawdown">--</strong></div></div><div class="analysis-details"><div><span>Wins / losses / breakeven</span><strong id="btWinsLosses">--</strong></div><div><span>Profit factor</span><strong id="btProfitFactor">--</strong></div><div><span>Average R / trade</span><strong id="btAverageR">--</strong></div><div><span>Gross profit / loss</span><strong id="btGross">--</strong></div><div><span>Sample</span><strong id="btSample">--</strong></div></div><p class="card-description">Uses up to 100 recent provider candles. Spread, commission, slippage and broker execution are excluded. A small sample cannot establish a reliable edge; this is research, not a trading instruction.</p>';
+  box.innerHTML='<div class="section-heading"><h2>Historical Strategy Backtest</h2><span>Recent closed-candle test</span></div><p>Tests the selected market and timeframe using EMA 9/21, RSI, structure and BOS. Risk model: 1.5 ATR stop, 2R target, maximum 20 candles per trade. If stop and target are both touched in one candle, stop is counted first.</p><div class="button-row"><button id="runBacktest" class="primary-button" type="button">Run historical backtest</button><button id="compareBacktest" class="secondary-button" type="button">Compare Gold vs GBPJPY</button></div><div id="compareStatus" class="news-result" aria-live="polite">Compare both markets on the selected timeframe.</div><div class="analysis-details"><div><span>Gold · Net / PF / trades</span><strong id="compareGold">--</strong></div><div><span>GBPJPY · Net / PF / trades</span><strong id="compareGbpjpy">--</strong></div><div><span>Comparison</span><strong id="compareWinner">--</strong></div></div><div id="backtestStatus" class="news-result" aria-live="polite">Choose a market and timeframe, then run the test.</div><div class="backtest-stats"><div><small>TRADES</small><strong id="btTrades">--</strong></div><div><small>WIN RATE</small><strong id="btWinRate">--</strong></div><div><small>NET RESULT</small><strong id="btNetR">--</strong></div><div><small>MAX DRAWDOWN</small><strong id="btDrawdown">--</strong></div></div><div class="analysis-details"><div><span>Wins / losses / breakeven</span><strong id="btWinsLosses">--</strong></div><div><span>Profit factor</span><strong id="btProfitFactor">--</strong></div><div><span>Average R / trade</span><strong id="btAverageR">--</strong></div><div><span>Gross profit / loss</span><strong id="btGross">--</strong></div><div><span>Sample</span><strong id="btSample">--</strong></div></div><p class="card-description">Uses up to 100 recent provider candles. Spread, commission, slippage and broker execution are excluded. A small sample cannot establish a reliable edge; this is research, not a trading instruction.</p>';
   scanner.appendChild(box);
+  getElement("compareBacktest").addEventListener("click",async()=>{
+    const button=getElement("compareBacktest"),status=getElement("compareStatus"),timeframe=selectedTimeframe;
+    button.disabled=true;button.textContent="Comparing…";status.className="news-result";status.textContent="Testing Gold and GBPJPY on "+timeframe+" completed candles…";
+    setText("compareGold","Loading…");setText("compareGbpjpy","Loading…");setText("compareWinner","--");
+    const results={};
+    try{
+      for(const market of ["XAUUSD","GBPJPY"]){
+        const q=new URLSearchParams({market,interval:timeframe}),response=await fetch("/api/price?"+q.toString()),payload=await response.json();
+        if(!response.ok||!Array.isArray(payload.values))throw new Error(market+": "+(payload.error||"historical candles unavailable"));
+        const data=normalizeClosedCandles(payload.values);
+        if(data.length<50)throw new Error(market+": need 50 completed candles; received "+data.length);
+        results[market]={stats:piporaRunBacktest(data),count:data.length};
+        const r=results[market].stats,pf=Number.isFinite(r.profitFactor)?r.profitFactor.toFixed(2):(r.grossProfit>0?"∞":"--");
+        setText(market==="XAUUSD"?"compareGold":"compareGbpjpy",(r.net>=0?"+":"")+r.net.toFixed(2)+"R / PF "+pf+" / "+r.count+" trades");
+      }
+      const a=results.XAUUSD.stats,b=results.GBPJPY.stats;
+      // Compare net R first; profit factor is a secondary descriptor, not a ranking guarantee.
+      const winner=a.net>b.net?"Gold leads this sample":b.net>a.net?"GBPJPY leads this sample":"Both markets tie on net R";
+      setText("compareWinner",winner);
+      status.textContent="Same timeframe and rule set; "+winner.toLowerCase()+". Compare trade counts and drawdown too. This small recent sample is not proof of an edge.";
+    }catch(error){
+      status.className="news-result danger";status.textContent=error.message+" Comparison incomplete; no winner declared.";
+      setText("compareWinner","Incomplete · no conclusion");
+    }finally{button.disabled=false;button.textContent="Compare Gold vs GBPJPY";}
+  });
   getElement("runBacktest").addEventListener("click",async()=>{
     const b=getElement("runBacktest"),out=getElement("backtestStatus");b.disabled=true;b.textContent="Testing…";out.className="news-result";out.textContent="Loading historical candles…";
     try{
