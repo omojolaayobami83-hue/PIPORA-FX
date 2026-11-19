@@ -559,6 +559,28 @@ function detectPotentialOrderBlock(data, structure) {
   return "No clear opposing candle";
 }
 
+// Structural stop helper shared by live analysis and historical tests.
+// Use the latest confirmed swing with an ATR buffer when its distance is
+// reasonable; otherwise fall back to a volatility-based stop.
+function calculateStructuralStop(data, side, entry, atr, structure) {
+  if (!Number.isFinite(entry) || !Number.isFinite(atr) || atr <= 0) return null;
+  const swings = structure || analyzeStructure(data);
+  const candidates = side === "BUY" ? swings.lows : swings.highs;
+  const latestSwing = candidates && candidates.length ? candidates[candidates.length - 1].price : null;
+  const buffer = atr * 0.15;
+  const structural = Number.isFinite(latestSwing)
+    ? (side === "BUY" ? latestSwing - buffer : latestSwing + buffer)
+    : null;
+  const structuralRisk = Number.isFinite(structural)
+    ? (side === "BUY" ? entry - structural : structural - entry)
+    : NaN;
+  // Reject stops that are too tight or too wide relative to current volatility.
+  if (Number.isFinite(structuralRisk) && structuralRisk >= atr * 1.0 && structuralRisk <= atr * 2.5) {
+    return structural;
+  }
+  return side === "BUY" ? entry - atr * 1.5 : entry + atr * 1.5;
+}
+
 // ==========================================
 // MAIN ANALYSIS
 // ==========================================
@@ -578,7 +600,7 @@ function analyzeMarket() {
   setText("trendConfirmation",trendConfirmed?"ALIGNED":"NOT ALIGNED");setText("bos",structure.bos);setText("choch",structure.choch);
   setText("liquidity",analyzeLiquidity(candles,structure));setText("fairValueGap",detectFairValueGap(candles));
   setText("supplyDemand",detectPotentialOrderBlock(candles,structure));setText("support",formatPrice(support));setText("resistance",formatPrice(resistance));
-  evaluateSetup({last,ema9,ema21,rsi,trend:structure.trend,bos:structure.bos,trendConfirmed,emaAligned,priceAboveFastEma,atr});
+  evaluateSetup({last,ema9,ema21,rsi,trend:structure.trend,bos:structure.bos,trendConfirmed,emaAligned,priceAboveFastEma,atr,structure});
 }
 
 
@@ -587,7 +609,7 @@ function analyzeMarket() {
 // ==========================================
 
 function evaluateSetup(d) {
-  const {last,ema9,ema21,rsi,trend,bos,trendConfirmed,emaAligned,priceAboveFastEma,atr}=d;
+  const {last,ema9,ema21,rsi,trend,bos,trendConfirmed,emaAligned,priceAboveFastEma,atr,structure}=d;
   const isGold=selectedMarket==="XAUUSD",range=last.high-last.low;
   const volatilityUsable=Number.isFinite(atr)&&atr>0&&range<=atr*(isGold?2.8:2.5);
   const bullishRsi=rsi!==null&&rsi>=52&&rsi<=68,bearishRsi=rsi!==null&&rsi>=32&&rsi<=48;
@@ -610,8 +632,8 @@ function evaluateSetup(d) {
   if(badge){badge.textContent=decision;badge.className="signal-badge "+(decision==="BUY CANDIDATE"?"buy":decision==="SELL CANDIDATE"?"sell":"wait");}
   setText("signalExplanation",explanation);setText("analysisScore",score+" / 6 confluence checks");
   setText("analysisReasons",checks.map(x=>(x.pass?"✓ ":"• ")+x.label+": "+x.detail).join(" · "));
-  if(decision==="BUY CANDIDATE"){const sl=last.close-atr*1.5;setText("entry",formatPrice(last.close));setText("stopLoss",formatPrice(sl));setText("takeProfit",formatPrice(last.close+(last.close-sl)*2));}
-  else if(decision==="SELL CANDIDATE"){const sl=last.close+atr*1.5;setText("entry",formatPrice(last.close));setText("stopLoss",formatPrice(sl));setText("takeProfit",formatPrice(last.close-(sl-last.close)*2));}
+  if(decision==="BUY CANDIDATE"){const sl=calculateStructuralStop(candles,"BUY",last.close,atr,structure);setText("entry",formatPrice(last.close));setText("stopLoss",formatPrice(sl));setText("takeProfit",formatPrice(last.close+(last.close-sl)*2));}
+  else if(decision==="SELL CANDIDATE"){const sl=calculateStructuralStop(candles,"SELL",last.close,atr,structure);setText("entry",formatPrice(last.close));setText("stopLoss",formatPrice(sl));setText("takeProfit",formatPrice(last.close-(sl-last.close)*2));}
   else{setText("entry","--");setText("stopLoss","--");setText("takeProfit","--");}
 }
 
@@ -953,8 +975,8 @@ window.addEventListener("appinstalled",()=>{if(installAppButton)installAppButton
 function piporaBacktestSignal(data, i) {
   const s=data.slice(0,i+1), closes=s.map(c=>c.close), fast=calculateEMA(closes,9).at(-1), slow=calculateEMA(closes,21).at(-1), rsi=calculateRSI(closes,14), atr=calculateATR(s,14), structure=analyzeStructure(s), price=closes.at(-1);
   if(![fast,slow,rsi,atr].every(Number.isFinite)||atr<=0)return null;
-  if(structure.trend==="BULLISH"&&fast>slow&&price>fast&&rsi>=52&&rsi<=68&&structure.bos==="BULLISH")return{side:"BUY",entry:price,stop:price-1.5*atr,target:price+3*atr};
-  if(structure.trend==="BEARISH"&&fast<slow&&price<fast&&rsi>=32&&rsi<=48&&structure.bos==="BEARISH")return{side:"SELL",entry:price,stop:price+1.5*atr,target:price-3*atr};
+  if(structure.trend==="BULLISH"&&fast>slow&&price>fast&&rsi>=52&&rsi<=68&&structure.bos==="BULLISH")return{side:"BUY",entry:price,stop:calculateStructuralStop(s,"BUY",price,atr,structure)};
+  if(structure.trend==="BEARISH"&&fast<slow&&price<fast&&rsi>=32&&rsi<=48&&structure.bos==="BEARISH")return{side:"SELL",entry:price,stop:calculateStructuralStop(s,"SELL",price,atr,structure)};
   return null;
 }
 function piporaRunBacktest(data){
@@ -1000,7 +1022,7 @@ function piporaRunBacktest(data){
 function installPiporaBacktest(){
   const scanner=getElement("scanner");if(!scanner||getElement("piporaBacktest"))return;
   const box=document.createElement("section");box.id="piporaBacktest";box.className="scanner-card backtest-card";
-  box.innerHTML='<div class="section-heading"><h2>Historical Strategy Backtest</h2><span>Recent closed-candle test</span></div><p>Tests the selected market and timeframe using EMA 9/21, RSI, structure and BOS. Risk model: 1.5 ATR stop, 2R target, maximum 20 candles per trade. If stop and target are both touched in one candle, stop is counted first.</p><div class="button-row"><button id="runBacktest" class="primary-button" type="button">Run historical backtest</button><button id="compareBacktest" class="secondary-button" type="button">Compare Gold vs GBPJPY</button></div><div id="compareStatus" class="news-result" aria-live="polite">Compare both markets on the selected timeframe.</div><div class="analysis-details"><div><span>Gold · Net / PF / trades</span><strong id="compareGold">--</strong></div><div><span>GBPJPY · Net / PF / trades</span><strong id="compareGbpjpy">--</strong></div><div><span>Comparison</span><strong id="compareWinner">--</strong></div></div><div id="backtestStatus" class="news-result" aria-live="polite">Choose a market and timeframe, then run the test.</div><div class="backtest-stats"><div><small>TRADES</small><strong id="btTrades">--</strong></div><div><small>WIN RATE</small><strong id="btWinRate">--</strong></div><div><small>NET RESULT</small><strong id="btNetR">--</strong></div><div><small>MAX DRAWDOWN</small><strong id="btDrawdown">--</strong></div></div><div class="analysis-details"><div><span>Wins / losses / breakeven</span><strong id="btWinsLosses">--</strong></div><div><span>Profit factor</span><strong id="btProfitFactor">--</strong></div><div><span>Average R / trade</span><strong id="btAverageR">--</strong></div><div><span>Gross profit / loss</span><strong id="btGross">--</strong></div><div><span>Sample</span><strong id="btSample">--</strong></div></div><p class="card-description">Uses up to 100 recent provider candles. Spread, commission, slippage and broker execution are excluded. A small sample cannot establish a reliable edge; this is research, not a trading instruction.</p>';
+  box.innerHTML='<div class="section-heading"><h2>Historical Strategy Backtest</h2><span>Recent closed-candle test</span></div><p>Tests the selected market and timeframe using EMA 9/21, RSI, structure and BOS. Risk model: confirmed swing stop with 0.15 ATR buffer when swing distance is 1.0–2.5 ATR; otherwise 1.5 ATR fallback. Target: 2R; maximum 20 candles per trade. If stop and target are both touched in one candle, stop is counted first.</p><div class="button-row"><button id="runBacktest" class="primary-button" type="button">Run historical backtest</button><button id="compareBacktest" class="secondary-button" type="button">Compare Gold vs GBPJPY</button></div><div id="compareStatus" class="news-result" aria-live="polite">Compare both markets on the selected timeframe.</div><div class="analysis-details"><div><span>Gold · Net / PF / trades</span><strong id="compareGold">--</strong></div><div><span>GBPJPY · Net / PF / trades</span><strong id="compareGbpjpy">--</strong></div><div><span>Comparison</span><strong id="compareWinner">--</strong></div></div><div id="backtestStatus" class="news-result" aria-live="polite">Choose a market and timeframe, then run the test.</div><div class="backtest-stats"><div><small>TRADES</small><strong id="btTrades">--</strong></div><div><small>WIN RATE</small><strong id="btWinRate">--</strong></div><div><small>NET RESULT</small><strong id="btNetR">--</strong></div><div><small>MAX DRAWDOWN</small><strong id="btDrawdown">--</strong></div></div><div class="analysis-details"><div><span>Wins / losses / breakeven</span><strong id="btWinsLosses">--</strong></div><div><span>Profit factor</span><strong id="btProfitFactor">--</strong></div><div><span>Average R / trade</span><strong id="btAverageR">--</strong></div><div><span>Gross profit / loss</span><strong id="btGross">--</strong></div><div><span>Sample</span><strong id="btSample">--</strong></div></div><p class="card-description">Uses up to 100 recent provider candles. Spread, commission, slippage and broker execution are excluded. A small sample cannot establish a reliable edge; this is research, not a trading instruction.</p>';
   scanner.appendChild(box);
   getElement("compareBacktest").addEventListener("click",async()=>{
     const button=getElement("compareBacktest"),status=getElement("compareStatus"),timeframe=selectedTimeframe;
