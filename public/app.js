@@ -1064,3 +1064,66 @@ function installPiporaBacktest(){
   });
 }
 document.addEventListener("DOMContentLoaded",installPiporaBacktest);
+
+
+/* PIPORA Academy: interactive knowledge checks and local progress */
+(function installAcademyQuizzes(){
+  const quizzes=[
+    {title:"Market Structure",questions:[
+      {q:"Which sequence describes a typical uptrend?",a:["HH and HL","LH and LL","Only equal highs"],correct:0,why:"Higher highs and higher lows show rising swing points."},
+      {q:"What is a lower high?",a:["A high above the last high","A rally that fails below the previous swing high","A new lower low"],correct:1,why:"A lower high forms when the next swing high stays below the previous one."},
+      {q:"If the swing sequence is unclear, what should you do?",a:["Force a BUY or SELL","Use the smallest candle","Mark it uncertain and wait"],correct:2,why:"Not every market is trending. It is fine to wait for clearer structure."}]},
+    {title:"Support & Resistance",questions:[
+      {q:"Support is best described as…",a:["An area where falling price has previously found buying interest","A guaranteed floor","Any round number"],correct:0,why:"Support is an area where price has previously slowed or bounced; it can still break."},
+      {q:"How should you draw a key level?",a:["As a precise guaranteed line","Around clear swing reactions as a zone","On every candle"],correct:1,why:"Price often reacts within an area rather than at one exact price."},
+      {q:"What can old resistance become after a decisive break?",a:["Always resistance","A support area on a retest","A guaranteed entry"],correct:1,why:"This possible role reversal is worth watching, but it is not guaranteed."}]},
+    {title:"Break of Structure",questions:[
+      {q:"A bullish BOS usually involves price…",a:["Breaking below a relevant swing low","Breaking above a relevant swing high","Touching an EMA"],correct:1,why:"A bullish BOS is a break above a relevant previous swing high."},
+      {q:"CHOCH is commonly treated as…",a:["An early warning of a possible change in behaviour","Proof a new trend has started","A type of moving average"],correct:0,why:"It can warn of a change, but needs follow-through and context."},
+      {q:"What is stronger breakout evidence than a wick alone?",a:["A candle close beyond the level and follow-through","A random price spike","A coloured indicator"],correct:0,why:"A close and subsequent behaviour help assess whether price accepted beyond the level."}]},
+    {title:"Liquidity",questions:[
+      {q:"Buy-side liquidity is commonly watched around…",a:["Obvious highs","Only the middle of a range","Every moving average"],correct:0,why:"Buy stops may gather around obvious highs, though the full order book is not visible."},
+      {q:"A liquidity sweep example is when price…",a:["Never reaches a level","Trades beyond a watched high or low then returns inside","Moves sideways"],correct:1,why:"A sweep trades beyond a watched level and then returns inside it."},
+      {q:"Can a chart prove someone deliberately hunted your stop?",a:["Yes, always","No; the chart shows price behaviour, not intent","Only on Gold"],correct:1,why:"Avoid assuming intent. Focus on observable price action and manage risk."}]}
+  ];
+  const root=document.querySelector("#academy .academy-grid");
+  if(!root)return;
+  const key="piporaAcademyQuizV1";
+  let progress={};try{progress=JSON.parse(localStorage.getItem(key)||"{}")||{};}catch(e){}
+  const cards=root.querySelectorAll(".academy-lesson");
+  quizzes.forEach((quiz,index)=>{
+    const card=cards[index];if(!card)return;
+    const box=document.createElement("section");box.className="academy-quiz";
+    box.innerHTML='<h4>Quick knowledge check</h4><p class="academy-quiz-intro">Answer all three questions to check your understanding.</p><div class="academy-quiz-questions"></div><button class="primary-button academy-quiz-submit" type="button">Check my answers</button><p class="academy-quiz-result" aria-live="polite"></p>';
+    const list=box.querySelector(".academy-quiz-questions");
+    quiz.questions.forEach((item,qi)=>{
+      const field=document.createElement("fieldset");field.className="academy-question";
+      const legend=document.createElement("legend");legend.textContent=(qi+1)+". "+item.q;field.appendChild(legend);
+      item.a.forEach((answer,ai)=>{
+        const label=document.createElement("label"),input=document.createElement("input");
+        input.type="radio";input.name="pipora-quiz-"+index+"-"+qi;input.value=String(ai);
+        label.append(input,document.createTextNode(" "+answer));field.appendChild(label);
+      });
+      list.appendChild(field);
+    });
+    const result=box.querySelector(".academy-quiz-result");
+    if(progress[index])result.textContent="Previous best: "+progress[index].score+"/3 correct.";
+    box.querySelector("button").addEventListener("click",()=>{
+      let score=0,answered=0;const explanations=[];
+      quiz.questions.forEach((item,qi)=>{
+        const selected=box.querySelector('input[name="pipora-quiz-'+index+'-'+qi+'"]:checked');
+        if(selected){answered++;if(Number(selected.value)===item.correct)score++;explanations.push((qi+1)+". "+item.why);}
+      });
+      if(answered!==quiz.questions.length){result.textContent="Please answer all three questions first.";return;}
+      const previous=progress[index]?.score||0;
+      progress[index]={score:Math.max(score,previous),latest:score,completed:score===3||Boolean(progress[index]?.completed)};
+      try{localStorage.setItem(key,JSON.stringify(progress));}catch(e){}
+      result.textContent="You scored "+score+"/3. "+(score===3?"Excellent — lesson check passed!":"Review the notes and try again.")+" "+explanations.join(" ");
+    });
+    card.querySelector(".academy-lesson-content").appendChild(box);
+  });
+  const summary=document.createElement("p");summary.className="academy-progress";
+  const done=Object.values(progress).filter(x=>x.completed).length;
+  summary.textContent="Quiz progress: "+done+" of 4 lessons passed (saved on this device).";
+  root.parentElement.insertBefore(summary,root);
+})();
