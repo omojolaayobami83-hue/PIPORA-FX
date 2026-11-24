@@ -21,7 +21,7 @@ const loginBuckets = new Map();
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "10kb" }));
 
-const SYMBOLS = { XAUUSD: "XAU/USD", GBPJPY: "GBP/JPY" };
+const SYMBOLS = { XAUUSD: "XAU/USD", GBPUSD: "GBP/USD", EURUSD: "EUR/USD", USDJPY: "USD/JPY", GBPJPY: "GBP/JPY" };
 const INTERVALS = new Set(["5min", "15min", "1h", "4h"]);
 
 function authConfigured() {
@@ -78,7 +78,7 @@ function isSameOrigin(req) {
 }
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, app: "PIPORA GOLD", accessConfigured: authConfigured() });
+  res.json({ ok: true, app: "PIPORA FX", accessConfigured: authConfigured() });
 });
 app.get("/api/auth/status", (req, res) => {
   res.set("Cache-Control", "no-store");
