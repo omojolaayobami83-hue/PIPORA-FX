@@ -26,6 +26,7 @@ const TIMEFRAMES = {
 };
 
 let selectedMarket = "XAUUSD";
+window.getPiporaSelectedMarket = () => selectedMarket;
 let selectedTimeframe = "5min";
 
 let candles = [];
