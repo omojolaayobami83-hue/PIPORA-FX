@@ -70,17 +70,32 @@
   }
   async function getCandles(market,interval){
     const query=new URLSearchParams({market,interval});
-    const response=await fetch("/api/price?"+query.toString(),{cache:"no-store"});
-    const payload=await response.json();
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),15000);
+    let response,payload;
+    try{
+      response=await fetch("/api/price?"+query.toString(),{cache:"no-store",signal:controller.signal});
+      payload=await response.json();
+    }catch(error){
+      if(error.name==="AbortError")throw new Error("Market data request timed out. No setup can be assessed.");
+      throw new Error("Market data response could not be read. No setup can be assessed.");
+    }finally{clearTimeout(timeout);}
     if(!response.ok||!Array.isArray(payload.values))throw new Error(payload.error||"Market data unavailable");
+    if(payload.market!==market||payload.interval!==interval)throw new Error("Market data mismatch. Please scan again.");
+    const fetched=Date.parse(payload.fetchedAt||"");
+    if(!Number.isFinite(fetched)||Date.now()-fetched>120000||fetched>Date.now()+30000)throw new Error("Market data feed is stale or its timestamp is invalid. No setup can be assessed.");
     const ordered=payload.values.slice().reverse(),clean=[],seen=new Set();
     for(const row of ordered){
       const c={time:row.datetime||"",open:Number(row.open),high:Number(row.high),low:Number(row.low),close:Number(row.close)};
       if(![c.open,c.high,c.low,c.close].every(Number.isFinite)||c.high<c.low||c.high<Math.max(c.open,c.close)||c.low>Math.min(c.open,c.close))continue;
-      if(c.time&&seen.has(c.time))continue;if(c.time)seen.add(c.time);clean.push(c);
+      if(!c.time||seen.has(c.time))continue;
+      seen.add(c.time);clean.push(c);
     }
     if(clean.length)clean.pop(); // exclude the provider's newest possibly-forming candle
-    if(clean.length<35)throw new Error("Not enough completed "+interval+" candles.");
+    if(clean.length<35)throw new Error("Not enough valid completed "+interval+" candles.");
+    for(let i=1;i<clean.length;i++){
+      if(!(clean[i].time>clean[i-1].time))throw new Error("Candle timestamps are not in chronological order. No setup can be assessed.");
+    }
     return clean;
   }
   function swings(data){
