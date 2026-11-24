@@ -313,16 +313,16 @@
 
       <!-- GOLD MULTI-TIMEFRAME SCANNER -->
       <section id="scanner" class="page">
-        <div class="section-heading"><h2>Multi-timeframe Context Scanner</h2><span>Choose any supported market on the dashboard, then scan its 4H, 1H, 15M and 5M context</span></div>
+        <div class="section-heading"><h2>ICT Scalping Confirmation</h2><span>4H guardrail · 1H direction · 15M setup · 5M entry trigger</span></div>
         <div class="scanner-card">
-          <p>Higher timeframes provide context; lower timeframes help refine timing. A mixed reading means WAIT.</p>
+          <p>Use 1H for directional bias, 15M for setup alignment and 5M for the entry trigger. The 4H is a countertrend guardrail. A missing confirmation means WAIT.</p>
           <div class="mtf-grid">
-            <div class="mtf-card"><small>4H · BIG PICTURE</small><strong id="mtf4h">SCANNING</strong><span id="mtf4hNote">Trend and structure</span></div>
-            <div class="mtf-card"><small>1H · INTRADAY BIAS</small><strong id="mtf1h">SCANNING</strong><span id="mtf1hNote">Trend and structure</span></div>
-            <div class="mtf-card"><small>15M · SETUP</small><strong id="mtf15m">SCANNING</strong><span id="mtf15mNote">Trend and structure</span></div>
-            <div class="mtf-card"><small>5M · ENTRY TIMING</small><strong id="mtf5m">SCANNING</strong><span id="mtf5mNote">Trend and structure</span></div>
+            <div class="mtf-card"><small>4H · TREND GUARDRAIL</small><strong id="mtf4h">SCANNING</strong><span id="mtf4hNote">Trend and structure</span></div>
+            <div class="mtf-card"><small>1H · DIRECTION</small><strong id="mtf1h">SCANNING</strong><span id="mtf1hNote">Trend and structure</span></div>
+            <div class="mtf-card"><small>15M · SETUP ALIGNMENT</small><strong id="mtf15m">SCANNING</strong><span id="mtf15mNote">Trend and structure</span></div>
+            <div class="mtf-card"><small>5M · BOS + LIQUIDITY TRIGGER</small><strong id="mtf5m">SCANNING</strong><span id="mtf5mNote">Trend and structure</span></div>
           </div>
-          <div class="mtf-verdict"><span>TOP-DOWN VERDICT</span><strong id="mtfVerdict">WAITING FOR SCAN</strong><p id="mtfExplanation">The scanner compares four timeframes before showing a directional view.</p></div>
+          <div class="mtf-verdict"><span>TOP-DOWN VERDICT</span><strong id="mtfVerdict">WAITING FOR SCAN</strong><p id="mtfExplanation">A directional setup watch requires 1H and 15M agreement plus a matching 5M BOS and liquidity sweep. It is not an automatic trade entry.</p></div>
           <button id="runMtfScan" class="primary-button" type="button">Run XAUUSD scan</button>
           <p id="mtfUpdated" class="card-description"></p>
         </div>
