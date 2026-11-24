@@ -812,40 +812,70 @@ if (exportJournalButton) {
 // ==========================================
 
 
-/* PIPORA GOLD: top-down multi-timeframe analysis on completed candles */
-async function fetchTimeframeAnalysis(interval, market) {
+/* PIPORA FX: top-down scalping confirmation using completed candles only.
+   4H is a guardrail, 1H sets directional bias, 15M checks setup context,
+   and 5M must show a directional BOS plus a matching liquidity sweep. */
+async function fetchTimeframeAnalysis(interval, market){
   const q=new URLSearchParams({market,interval});
   const response=await fetch("/api/price?"+q.toString());
   const payload=await response.json();
-  if(!response.ok||!Array.isArray(payload.values)) throw new Error(payload.error||"Data unavailable");
+  if(!response.ok||!Array.isArray(payload.values))throw new Error(payload.error||"Data unavailable");
   const data=normalizeClosedCandles(payload.values);
-  if(data.length<30) throw new Error("Not enough completed "+interval+" candles");
-  const structure=analyzeStructure(data), closes=data.map(c=>c.close);
-  const fast=calculateEMA(closes,9).at(-1), slow=calculateEMA(closes,21).at(-1);
+  if(data.length<30)throw new Error("Not enough completed "+interval+" candles");
+  const structure=analyzeStructure(data),closes=data.map(c=>c.close);
+  const fast=calculateEMA(closes,9).at(-1),slow=calculateEMA(closes,21).at(-1);
   const emaBias=fast>slow?"BULLISH":fast<slow?"BEARISH":"NEUTRAL";
-  return {bias:structure.trend===emaBias?emaBias:"MIXED",structure:structure.structure,emaBias};
+  const bias=structure.trend===emaBias?emaBias:"MIXED";
+  return{bias,trend:structure.trend,structure:structure.structure,emaBias,bos:structure.bos,liquidity:analyzeLiquidity(data,structure),fvg:detectFairValueGap(data)};
 }
 async function runMtfScan(){
   const button=getElement("runMtfScan"),scanMarket=selectedMarket;
   if(button){button.disabled=true;button.textContent="Scanning…";}
-  setText("mtfVerdict","SCANNING");setText("mtfExplanation","Comparing 4H, 1H, 15M and 5M context for "+scanMarket+" using completed candles…");
-  const frames=[["4h","mtf4h"],["1h","mtf1h"],["15min","mtf15m"],["5min","mtf5m"]], results={};
+  setText("mtfVerdict","SCANNING");
+  setText("mtfExplanation","Checking 4H guardrail, 1H direction, 15M setup and 5M entry trigger for "+scanMarket+" using completed candles…");
+  const frames=[["4h","mtf4h"],["1h","mtf1h"],["15min","mtf15m"],["5min","mtf5m"]],results={};
   try{
-    for(const [tf,id] of frames){
+    for(const[tf,id]of frames){
       const a=await fetchTimeframeAnalysis(tf,scanMarket);
-      if(scanMarket!==selectedMarket) throw new Error("Market changed during scan. Run the scan again for the selected instrument.");
-      results[tf]=a;setText(id,a.bias);setText(id+"Note",a.structure+" · EMA "+a.emaBias);
+      if(scanMarket!==selectedMarket)throw new Error("Market changed during scan. Run the scan again for the selected instrument.");
+      results[tf]=a;
+      setText(id,a.bias);
+      setText(id+"Note",a.structure+" · EMA "+a.emaBias);
     }
-    const higher=[results["4h"].bias,results["1h"].bias], lower=[results["15min"].bias,results["5min"].bias];
-    let verdict="WAIT", explanation="Timeframes are mixed. Wait for agreement; do not force a trade.";
-    if(higher.every(x=>x==="BULLISH")&&lower.every(x=>x==="BULLISH")){verdict="BULLISH ALIGNMENT";explanation="All four timeframes currently align bullish. This is context, not an entry signal; wait for a pullback and a separate trigger.";}
-    else if(higher.every(x=>x==="BEARISH")&&lower.every(x=>x==="BEARISH")){verdict="BEARISH ALIGNMENT";explanation="All four timeframes currently align bearish. This is context, not an entry signal; wait for a pullback and a separate trigger.";}
-    else if(higher.every(x=>x==="BULLISH")){verdict="BULLISH BIAS · WAIT";explanation="The higher timeframes lean bullish, but lower-timeframe confirmation is incomplete.";}
-    else if(higher.every(x=>x==="BEARISH")){verdict="BEARISH BIAS · WAIT";explanation="The higher timeframes lean bearish, but lower-timeframe confirmation is incomplete.";}
-    setText("mtfVerdict",verdict);setText("mtfExplanation",explanation);
-    setText("mtfUpdated","Last scan: "+new Date().toLocaleString("en-NG",{timeZone:"Africa/Lagos"}));
-  }catch(error){setText("mtfVerdict","SCAN INCOMPLETE");setText("mtfExplanation",error.message+" No directional conclusion is available.");frames.forEach(([,id])=>{setText(id,"--");setText(id+"Note","Data unavailable");});}
-  finally{if(button){button.disabled=false;button.textContent="Run "+selectedMarket+" scan";}}
+    const h4=results["4h"],h1=results["1h"],m15=results["15min"],m5=results["5min"];
+    const direction=h1.bias;
+    const opposite=direction==="BULLISH"?"BEARISH":"BULLISH";
+    const fourHourAllows=direction!=="MIXED"&&h4.bias!==opposite;
+    const fifteenAgrees=m15.bias===direction;
+    const fiveAgrees=m5.bias===direction;
+    const expectedSweep=direction==="BULLISH"?"Possible sell-side liquidity sweep":"Possible buy-side liquidity sweep";
+    const sweepConfirmed=m5.liquidity===expectedSweep;
+    const bosConfirmed=m5.bos===direction;
+    let verdict="WAIT",explanation="No complete setup. Wait for 1H direction, 15M agreement and a confirmed 5M trigger; never force a trade.";
+    if(direction==="MIXED"){
+      explanation="1H direction is mixed or unclear. Stand aside until a cleaner intraday bias forms.";
+    }else if(!fourHourAllows){
+      explanation="The 4H context conflicts with the 1H direction. Treat this as a countertrend condition and WAIT.";
+    }else if(!fifteenAgrees){
+      explanation="1H bias is "+direction+", but 15M has not aligned. Wait for the setup timeframe to agree.";
+    }else if(!fiveAgrees){
+      explanation="1H and 15M agree "+direction+", but 5M has not confirmed entry direction. Wait.";
+    }else if(!bosConfirmed||!sweepConfirmed){
+      explanation="Direction aligns, but the 5M ICT-inspired trigger is incomplete. Need a "+(direction==="BULLISH"?"bullish":"bearish")+" BOS and matching liquidity sweep; no entry yet.";
+    }else{
+      verdict=direction+" SETUP · CONFIRM RISK";
+      explanation="4H does not oppose the 1H "+direction+" bias; 15M agrees; 5M shows matching BOS and a possible "+(direction==="BULLISH"?"sell-side":"buy-side")+" liquidity sweep. This is a setup watch, not an automatic entry. Check spread, news, stop distance and risk before any decision.";
+    }
+    setText("mtfVerdict",verdict);
+    setText("mtfExplanation",explanation);
+    setText("mtfUpdated","Last scan: "+new Date().toLocaleString("en-NG",{timeZone:"Africa/Lagos"})+" · 5M BOS: "+m5.bos+" · 5M liquidity: "+m5.liquidity);
+  }catch(error){
+    setText("mtfVerdict","SCAN INCOMPLETE");
+    setText("mtfExplanation",error.message+" No directional conclusion is available.");
+    frames.forEach(([,id])=>{setText(id,"--");setText(id+"Note","Data unavailable");});
+  }finally{
+    if(button){button.disabled=false;button.textContent="Run "+selectedMarket+" scan";}
+  }
 }
 function updateGoldSessionClock(){
   const parts=new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Lagos",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date());
