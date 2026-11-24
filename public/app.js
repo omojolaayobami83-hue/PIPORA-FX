@@ -11,18 +11,11 @@
 // ==========================================
 
 const MARKETS = {
-  XAUUSD: {
-    symbol: "OANDA:XAUUSD",
-    digits: 2,
-    label: "Gold vs US Dollar",
-    pipLabel: "price dollars"
-  },
-  GBPJPY: {
-    symbol: "FX:GBPJPY",
-    digits: 3,
-    label: "British Pound vs Japanese Yen",
-    pipLabel: "price units"
-  }
+  XAUUSD: { symbol: "OANDA:XAUUSD", digits: 2, label: "Gold vs US Dollar", pipLabel: "price dollars" },
+  GBPUSD: { symbol: "FX:GBPUSD", digits: 5, label: "British Pound vs US Dollar", pipLabel: "pips" },
+  EURUSD: { symbol: "FX:EURUSD", digits: 5, label: "Euro vs US Dollar", pipLabel: "pips" },
+  USDJPY: { symbol: "FX:USDJPY", digits: 3, label: "US Dollar vs Japanese Yen", pipLabel: "pips" },
+  GBPJPY: { symbol: "FX:GBPJPY", digits: 3, label: "British Pound vs Japanese Yen", pipLabel: "pips" }
 };
 
 const TIMEFRAMES = {
@@ -33,7 +26,7 @@ const TIMEFRAMES = {
 };
 
 let selectedMarket = "XAUUSD";
-let selectedTimeframe = "15min";
+let selectedTimeframe = "5min";
 
 let candles = [];
 let marketRequestNumber = 0;
@@ -131,8 +124,8 @@ document.querySelectorAll("[data-market]").forEach(button => {
     }
 
     selectedMarket = market;
-    setText("marketPageTitle", market === "XAUUSD" ? "GOLD vs USD" : "GBP vs JPY");
-    setText("marketPageSubtitle", market === "XAUUSD" ? "XAUUSD · Gold market analysis" : "GBPJPY · Pound / Yen market analysis");    document.querySelectorAll("[data-market]").forEach(item => {
+    setText("marketPageTitle", market + " · " + MARKETS[market].label);
+    setText("marketPageSubtitle", "ICT-inspired scalping mentor · 5M execution");    document.querySelectorAll("[data-market]").forEach(item => {
       item.classList.toggle(
         "active",
         item.dataset.market === market
@@ -140,7 +133,7 @@ document.querySelectorAll("[data-market]").forEach(button => {
     });
 
     setText("chartMarket", market);
-    setText("runMtfScan", "Run " + (market === "XAUUSD" ? "Gold" : "GBPJPY") + " scan");
+    setText("runMtfScan", "Run " + market + " scan");
 
     resetAnalysis();
     showPage("market");
@@ -834,7 +827,7 @@ async function fetchTimeframeAnalysis(interval, market) {
 async function runMtfScan(){
   const button=getElement("runMtfScan"),scanMarket=selectedMarket;
   if(button){button.disabled=true;button.textContent="Scanning…";}
-  setText("mtfVerdict","SCANNING");setText("mtfExplanation","Comparing four "+(scanMarket==="XAUUSD"?"Gold":"GBPJPY")+" timeframes using completed candles…");
+  setText("mtfVerdict","SCANNING");setText("mtfExplanation","Comparing 4H, 1H, 15M and 5M context for "+scanMarket+" using completed candles…");
   const frames=[["4h","mtf4h"],["1h","mtf1h"],["15min","mtf15m"],["5min","mtf5m"]], results={};
   try{
     for(const [tf,id] of frames){
@@ -851,7 +844,7 @@ async function runMtfScan(){
     setText("mtfVerdict",verdict);setText("mtfExplanation",explanation);
     setText("mtfUpdated","Last scan: "+new Date().toLocaleString("en-NG",{timeZone:"Africa/Lagos"}));
   }catch(error){setText("mtfVerdict","SCAN INCOMPLETE");setText("mtfExplanation",error.message+" No directional conclusion is available.");frames.forEach(([,id])=>{setText(id,"--");setText(id+"Note","Data unavailable");});}
-  finally{if(button){button.disabled=false;button.textContent="Run "+(selectedMarket==="XAUUSD"?"Gold":"GBPJPY")+" scan";}}
+  finally{if(button){button.disabled=false;button.textContent="Run "+selectedMarket+" scan";}}
 }
 function updateGoldSessionClock(){
   const parts=new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Lagos",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date());
@@ -865,7 +858,7 @@ const mtfButton=getElement("runMtfScan");if(mtfButton)mtfButton.addEventListener
 updateGoldSessionClock();setInterval(updateGoldSessionClock,60000);
 
 async function loadDashboardPrices(){
-  for (const market of ["XAUUSD","GBPJPY"]) {
+  for (const market of Object.keys(MARKETS)) {
     const node=getElement("tilePrice"+market);
     if(!node) continue;
     try {
