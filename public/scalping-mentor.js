@@ -137,7 +137,7 @@
   }
   async function scan(){
     if(state.running)return;
-    const market=window.selectedMarket||"XAUUSD",button=$("mentorRun");
+    const market=(window.getPiporaSelectedMarket ? window.getPiporaSelectedMarket() : "XAUUSD"),button=$("mentorRun");
     state.running=true;if(button){button.disabled=true;button.textContent="Scanning…";}
     $("mentorDecision").textContent="SCANNING";$("mentorExplanation").textContent="Loading 4H, 1H, 15M and 5M completed candles for "+market+".";
     $("mentorReasons").replaceChildren();["4h","1h","15min","5min"].forEach(tf=>renderFrame(tf,"LOADING","Checking closed candles"));
@@ -146,7 +146,7 @@
       const all={};
       for(const [interval,label] of FRAMES){
         all[interval]=await getCandles(market,interval);
-        if(market!==(window.selectedMarket||"XAUUSD"))throw new Error("Market changed during scan. Run the scan again.");
+        if(market!==((window.getPiporaSelectedMarket ? window.getPiporaSelectedMarket() : "XAUUSD")))throw new Error("Market changed during scan. Run the scan again.");
         const b=bias(all[interval]);
         renderFrame(interval,b,interval==="5min"?"Entry confirmation":interval==="15min"?"Setup context":"Directional context");
       }
@@ -194,7 +194,7 @@
   document.addEventListener("DOMContentLoaded",()=>{
     mount();
     document.querySelectorAll('[data-market]').forEach(button=>button.addEventListener("click",()=>setTimeout(()=>{if($("market")?.classList.contains("active"))scan();},500)));
-    const observer=new MutationObserver(()=>{if($("market")?.classList.contains("active")&&state.lastMarket!==(window.selectedMarket||"XAUUSD")&&!state.running)scan();});
+    const observer=new MutationObserver(()=>{if($("market")?.classList.contains("active")&&state.lastMarket!==((window.getPiporaSelectedMarket ? window.getPiporaSelectedMarket() : "XAUUSD"))&&!state.running)scan();});
     const page=$("market");if(page)observer.observe(page,{attributes:true,attributeFilter:["class"]});
     setTimeout(()=>{if($("market")?.classList.contains("active"))scan();},1200);
   });
