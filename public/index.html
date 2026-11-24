@@ -15,8 +15,8 @@
     content="#080b10"
   >
 
-  <title>PIPORA GOLD | Smart Market Intelligence</title>
-  <meta name="description" content="PIPORA GOLD brings technical market analysis, multi-timeframe context and risk tools for XAUUSD and GBPJPY.">
+  <title>PIPORA FX | Intelligent Scalping Mentor</title>
+  <meta name="description" content="PIPORA FX is an ICT-inspired forex scalping mentor with 5-minute entry analysis and multi-timeframe market context.">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/pipora-icon.svg" type="image/svg+xml">
 
@@ -48,7 +48,7 @@
 
         <div class="brand-text">
 
-          <h2>PIPORA GOLD</h2>
+          <h2>PIPORA FX</h2>
 
           <span>
             SMART MARKET INTELLIGENCE
@@ -213,6 +213,24 @@
             <span class="market-tile-price" id="tilePriceXAUUSD">Loading price…</span>
             <span class="market-tile-action">Open chart →</span>
           </button>
+          <button class="market-tile" type="button" data-market="GBPUSD">
+            <span class="market-tile-icon">🇬🇧 🇺🇸</span>
+            <span class="market-tile-copy"><strong>GBP vs USD</strong><small>GBPUSD · Pound / Dollar</small></span>
+            <span class="market-tile-price" id="tilePriceGBPUSD">Loading price…</span>
+            <span class="market-tile-action">Open chart →</span>
+          </button>
+          <button class="market-tile" type="button" data-market="EURUSD">
+            <span class="market-tile-icon">🇪🇺 🇺🇸</span>
+            <span class="market-tile-copy"><strong>EUR vs USD</strong><small>EURUSD · Euro / Dollar</small></span>
+            <span class="market-tile-price" id="tilePriceEURUSD">Loading price…</span>
+            <span class="market-tile-action">Open chart →</span>
+          </button>
+          <button class="market-tile" type="button" data-market="USDJPY">
+            <span class="market-tile-icon">🇺🇸 🇯🇵</span>
+            <span class="market-tile-copy"><strong>USD vs JPY</strong><small>USDJPY · Dollar / Yen</small></span>
+            <span class="market-tile-price" id="tilePriceUSDJPY">Loading price…</span>
+            <span class="market-tile-action">Open chart →</span>
+          </button>
           <button class="market-tile" type="button" data-market="GBPJPY">
             <span class="market-tile-icon">🇬🇧 🇯🇵</span>
             <span class="market-tile-copy"><strong>GBP vs JPY</strong><small>GBPJPY · Pound / Yen</small></span>
@@ -220,7 +238,7 @@
             <span class="market-tile-action">Open chart →</span>
           </button>
         </div>
-        <div class="dashboard-note">Choose a market to view its live chart, technical indicators and market analysis. No chart is shown on this home screen.</div>
+        <div class="dashboard-note">Choose Gold or a major forex pair. PIPORA checks 4H, 1H and 15M context, then looks for an ICT-inspired 5M entry. No chart is shown on this home screen.</div>
       </section>
 
       <!-- MARKET CHART PAGE: opened only after a dashboard card is selected -->
@@ -240,8 +258,8 @@
           <div class="chart-header">
             <div><h2 id="chartMarket">XAUUSD</h2><span>TradingView chart · analysis uses Twelve Data candles; quotes may differ by provider</span></div>
             <div class="timeframe-selector">
-              <button class="timeframe-button" data-timeframe="5min">5M</button>
-              <button class="timeframe-button active" data-timeframe="15min">15M</button>
+              <button class="timeframe-button active" data-timeframe="5min">5M</button>
+              <button class="timeframe-button" data-timeframe="15min">15M</button>
               <button class="timeframe-button" data-timeframe="1h">1H</button>
               <button class="timeframe-button" data-timeframe="4h">4H</button>
             </div>
@@ -252,7 +270,7 @@
           <div class="section-heading"><h2>Smart Market Analysis</h2><span>Technical market conditions</span></div>
           <div class="analysis-grid">
             <div class="analysis-card signal-card">
-              <div class="analysis-card-header"><h3>Market Decision</h3><span>Rule-based analysis</span></div>
+              <div class="analysis-card-header"><h3>Technical Conditions</h3><span>Supporting indicators only</span></div>
               <div id="signal" class="signal-badge wait">WAIT</div>
               <p id="signalExplanation" class="analysis-description">Waiting for market data and confirmation.</p><p id="analysisScore" class="card-description">--</p><p id="analysisReasons" class="card-description">The engine will explain which checks pass or fail.</p>
               <div class="analysis-details">
@@ -478,7 +496,7 @@
 
               Market
 
-              <select id="journalMarket"><option value="XAUUSD">XAUUSD — Gold</option><option value="GBPJPY">GBPJPY — Pound / Yen</option></select>
+              <select id="journalMarket"><option value="XAUUSD">XAUUSD — Gold</option><option value="GBPUSD">GBPUSD — Pound / Dollar</option><option value="EURUSD">EURUSD — Euro / Dollar</option><option value="USDJPY">USDJPY — Dollar / Yen</option><option value="GBPJPY">GBPJPY — Pound / Yen</option></select>
 
             </label>
 
@@ -653,6 +671,7 @@
 
   <!-- APP JAVASCRIPT -->
   <script src="app.js"></script>
+  <script src="scalping-mentor.js"></script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(error => console.warn("App offline support unavailable:", error)));
